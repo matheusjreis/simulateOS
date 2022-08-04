@@ -1,0 +1,119 @@
+<div class="cpu-manager">
+    <div class="process-manager__title">
+        <h1>Gerência de processador</h1>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <table
+                mat-table
+                [dataSource]="(cpu$ | async)?.waiting || []"
+                class="cpu-manager__table"
+            >
+                <ng-container matColumnDef="execution">
+                    <th
+                        mat-header-cell
+                        *matHeaderCellDef
+                        class="cpu-manager__fixed-column"
+                    >
+                        Execução
+                    </th>
+                </ng-container>
+
+                <ng-container matColumnDef="currentProcess">
+                    <th mat-header-cell *matHeaderCellDef>
+                        <div
+                            *ngIf="(cpu$ | async)?.execution"
+                            class="cpu-manager__color-preview"
+                            [ngStyle]="{
+                                'background-color': (cpu$ | async)?.execution
+                                    ?.color
+                            }"
+                        ></div>
+                    </th>
+                </ng-container>
+
+                <ng-container matColumnDef="priority">
+                    <th
+                        mat-header-cell
+                        *matHeaderCellDef
+                        class="cpu-manager__fixed-column"
+                    >
+                        Prioridade
+                    </th>
+                    <td
+                        mat-cell
+                        *matCellDef="let cpuItem"
+                        class="cpu-manager__priority"
+                    >
+                        {{ cpuItem.priority }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="processes">
+                    <th mat-header-cell *matHeaderCellDef>Processos</th>
+                    <td mat-cell *matCellDef="let cpuItem">
+                        <div class="cpu-manager__flex-cell">
+                            <div
+                                *ngFor="let process of cpuItem.processes"
+                                class="cpu-manager__color-preview"
+                                [ngStyle]="{
+                                    'background-color': process.color
+                                }"
+                            ></div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-header-row *matHeaderRowDef="headerColumns"></tr>
+                <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedColumns"
+                ></tr>
+            </table>
+        </div>
+
+        <div class="col">
+            <div class="row">
+                <div class="col">
+                    <div>Tempo de espera de I/O</div>
+                    <mat-slider
+                        [min]="1"
+                        [max]="10"
+                        [step]="1"
+                        [tickInterval]="1"
+                        [(ngModel)]="waitTime"
+                        color="primary"
+                    >
+                    </mat-slider>
+                </div>
+
+                <div class="col">
+                    <div>Fatia de tempo</div>
+                    <mat-slider
+                        [min]="1"
+                        [max]="10"
+                        [step]="1"
+                        [tickInterval]="1"
+                        [(ngModel)]="timeSlice"
+                        color="primary"
+                    >
+                    </mat-slider>
+                </div>
+
+                <div class="col">
+                    <div>Clock da UCP</div>
+                    <mat-slider
+                        [min]="1"
+                        [max]="10"
+                        [step]="1"
+                        [tickInterval]="1"
+                        color="primary"
+                    >
+                    </mat-slider>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

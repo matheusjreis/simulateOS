@@ -1,0 +1,65 @@
+<div class="processes-stats">
+    <div class="processes-stats__data">
+        <div>
+            <div class="processes-stats__title">Tempo</div>
+            <div class="processes-stats__content">{{ timer$ | async }}</div>
+        </div>
+
+        <div>
+            <div class="processes-stats__title">Processos</div>
+            <div class="processes-stats__content">
+                {{ (availableProcesses$ | async)?.length! }}
+            </div>
+        </div>
+    </div>
+
+    <div class="cpu-settings">
+        <div>
+            <div>Tempo de espera de I/O</div>
+            <mat-slider
+                (input)="changeIOWaitTime($event)"
+                [min]="1"
+                [max]="10"
+                [step]="1"
+                [tickInterval]="1"
+                [(ngModel)]="ioWaitTime"
+                color="primary"
+                thumbLabel
+            >
+            </mat-slider>
+        </div>
+
+        <div>
+            <div>Fatia de tempo</div>
+            <mat-slider
+                (input)="changeTimeSlice($event)"
+                [min]="2"
+                [max]="10"
+                [step]="1"
+                [tickInterval]="1"
+                [(ngModel)]="timeSlice"
+                color="primary"
+                thumbLabel
+            >
+            </mat-slider>
+        </div>
+
+        <div>
+            <div>Clock da CPU</div>
+            <mat-slider
+                (input)="changeCpuClock($event)"
+                [min]="1"
+                [max]="10"
+                [step]="1"
+                [tickInterval]="1"
+                [(ngModel)]="cpuClock"
+                color="primary"
+                thumbLabel
+            >
+            </mat-slider>
+        </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="stopProcesses()">
+        Parar
+    </button>
+</div>

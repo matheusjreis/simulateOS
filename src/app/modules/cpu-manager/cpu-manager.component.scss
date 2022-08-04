@@ -1,0 +1,67 @@
+@import "~@angular/material/theming";
+
+.cpu-manager {
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h1 {
+      margin-bottom: 0;
+    }
+
+    h4 {
+      margin-bottom: 0;
+    }
+  }
+
+  &__table {
+    width: 70%;
+    margin-top: 24px;
+    border: 1px map_get($mat-blue, 100) solid;
+    background-color: map_get($mat-blue, 50);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+
+    tr {
+      height: 36px;
+    }
+
+    th {
+      color: map_get($mat-blue, "contrast", 50);
+      border-bottom: 1px map_get($mat-blue, 100) solid;
+      padding: 0 24px;
+    }
+
+    td {
+      color: map_get($mat-blue, "contrast", 50);
+      border-bottom: 1px map_get($mat-blue, 100) solid;
+      padding: 0 24px;
+    }
+
+    tr:last-child {
+      td {
+        border-bottom: 0px;
+      }
+    }
+  }
+
+  &__fixed-column {
+    width: 140px;
+  }
+
+  &__flex-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__color-preview {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #bdbdbd;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+}
