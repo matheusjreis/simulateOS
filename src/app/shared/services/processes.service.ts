@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, concatMap, delay, from, of, toArray } from 'rxjs';
-import { Color, ProcessColors } from '../constants/process-colors.constants';
+
+import { ProcessColors } from '../constants/process-colors.constants';
 import { ProcessStates } from '../constants/process-states.constants';
 import { ScalingTypesEnum } from '../constants/scaling-types.constants';
 import { GenericSelectData } from '../models/generic-select-data';
@@ -10,29 +11,6 @@ import { CreateProcessDTO, Process } from '../models/process';
 	providedIn: 'root',
 })
 export class ProcessesService {
-	processColors: Color[] = [];
-
-	createProcess(
-		process: CreateProcessDTO,
-		time: number
-	): Observable<Process[]> {
-		return from(Array.from(Array(process.number).keys())).pipe(
-			concatMap((index) => {
-				const item = {
-					id: this.generateId(),
-					priority: process.priority,
-					color: this.generateColor(process.color, index),
-					type: process.type,
-					state: ProcessStates.ready,
-					cpuTime: 0,
-					timeCreated: time,
-				};
-				return of(item).pipe(delay(50));
-			}),
-			toArray()
-		);
-	}
-
 	private generateId(): string {
 		const date = new Date();
 		return `${date.getMinutes()}${date.getSeconds()}${date.getMilliseconds()}`;
@@ -62,7 +40,29 @@ export class ProcessesService {
 		return Math.floor(Math.random() * (availableColors - 1));
 	}
 
-	getScalingTypesSelectData(): GenericSelectData<ScalingTypesEnum>[] {
+	public createProcess(
+		process: CreateProcessDTO,
+		time: number
+	): Observable<Process[]> {
+		return from(Array.from(Array(process.number).keys())).pipe(
+			concatMap((index) => {
+				const item = {
+					id: this.generateId(),
+					priority: process.priority,
+					color: this.generateColor(process.color, index),
+					type: process.type,
+					state: ProcessStates.ready,
+					cpuTime: 0,
+					timeCreated: time,
+					processTimeToFinish: process.processTimeToFinish,
+				};
+				return of(item).pipe(delay(50));
+			}),
+			toArray()
+		);
+	}
+
+	public getScalingTypesSelectData(): GenericSelectData<ScalingTypesEnum>[] {
 		return [
 			{
 				id: ScalingTypesEnum.Circular,

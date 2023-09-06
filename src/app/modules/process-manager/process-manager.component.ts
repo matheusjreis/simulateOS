@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
+
 import {
 	ProcessStates,
 	ProcessStatesColors,
@@ -13,6 +14,7 @@ import {
 	ProcessTypesNames,
 	ProcessTypesType,
 } from 'src/app/shared/constants/process-types.constants';
+import { ScalingTypesEnum } from 'src/app/shared/constants/scaling-types.constants';
 import { CreateProcessDTO, Process } from 'src/app/shared/models/process';
 import { Processes } from 'src/app/shared/stores/processes/processes.actions';
 import { ProcessesState } from 'src/app/shared/stores/processes/processes.state';
@@ -40,13 +42,22 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	@Select(ProcessesState.getIOQueueProcesses) iOProcesses$!: Observable<
 		Process[]
 	>;
+	@Select(ProcessesState.getCurrentScalingType)
+	currentScalingType!: Observable<ScalingTypesEnum>;
 
 	@ViewChild(MatMenuTrigger) actionsMenu!: MatMenuTrigger;
 
-	displayedColumns: string[] = ['id', 'priority', 'cpuTime'];
+	displayedColumns: string[] = [
+		'id',
+		'priority',
+		'cpuTime',
+		'processTimeToFinish',
+	];
+	// TODO: armazenar colunas em um estado global
 	displayedColumnsIO: string[] = ['id'];
 
 	readonly processState = ProcessesState;
+	readonly scalingTypeEnum = ScalingTypesEnum;
 
 	private subscriptions: Subscription = new Subscription();
 	availableProcesses: Process[] = [];
