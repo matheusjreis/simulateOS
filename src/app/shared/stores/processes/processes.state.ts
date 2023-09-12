@@ -10,6 +10,7 @@ import {
 import { ScalingTypesEnum } from '../../constants/scaling-types.constants';
 import { Process } from '../../models/process';
 import { ProcessesService } from '../../services/processes.service';
+import { Logs } from '../logs/logs.actions';
 import { Processes } from './processes.actions';
 
 export interface ProcessesStateModel {
@@ -172,6 +173,7 @@ export class ProcessesState {
 			new Processes.StopProcesses(),
 			new Processes.RunIO(),
 			new Processes.RunCPU(),
+			new Logs.ClearLogs(),
 		]);
 	}
 
