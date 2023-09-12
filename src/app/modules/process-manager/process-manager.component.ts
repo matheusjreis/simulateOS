@@ -42,18 +42,10 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	@Select(ProcessesState.getIOQueueProcesses) iOProcesses$!: Observable<
 		Process[]
 	>;
-	@Select(ProcessesState.getCurrentScalingType)
-	currentScalingType!: Observable<ScalingTypesEnum>;
+	@Select(ProcessesState.getDisplayedColumns)
+	displayedColumns$!: Observable<Array<string>>;
 
 	@ViewChild(MatMenuTrigger) actionsMenu!: MatMenuTrigger;
-
-	displayedColumns: string[] = [
-		'id',
-		'priority',
-		'cpuTime',
-		'processTimeToFinish',
-	];
-	// TODO: armazenar colunas em um estado global
 	displayedColumnsIO: string[] = ['id'];
 
 	readonly processState = ProcessesState;
@@ -64,6 +56,12 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	executingProcess?: Process;
 	ioProcess?: Process;
 	maxProcesses = 15;
+	finishedDisplayedColumns = [
+		'id',
+		'priority',
+		'cpuTime',
+		'processTimeToFinish',
+	];
 
 	constructor(private dialog: MatDialog, private store: Store) {}
 

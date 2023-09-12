@@ -20,6 +20,7 @@ export interface ProcessesStateModel {
 	timeSlice: number;
 	cpuClock: number;
 	scalingType: ScalingTypesEnum;
+	displayedColumns: Array<string>;
 }
 
 @State<ProcessesStateModel>({
@@ -32,6 +33,7 @@ export interface ProcessesStateModel {
 		timeSlice: 2,
 		cpuClock: 1,
 		scalingType: ScalingTypesEnum.Circular,
+		displayedColumns: ['id', 'cpuTime', 'processTimeToFinish'],
 	},
 })
 @Injectable()
@@ -74,11 +76,14 @@ export class ProcessesState {
 
 	@Selector()
 	static getFinishedProcesses(state: ProcessesStateModel) {
-		const states = [ProcessStates.suspended, ProcessStates.finished];
+		const suspendedProcesses = state.data.filter(
+			({ state }) => state === ProcessStates.suspended
+		);
+		const finishedProcesses = state.data.filter(
+			({ state }) => state === ProcessStates.finished
+		);
 
-		// TODO: ordenar os finalizados por ultimo
-
-		return state.data.filter((item) => states.includes(item.state));
+		return [...suspendedProcesses, ...finishedProcesses];
 	}
 
 	@Selector()
@@ -127,6 +132,30 @@ export class ProcessesState {
 		};
 	}
 
+	@Selector()
+	static getDisplayedColumns(state: ProcessesStateModel) {
+		return state.displayedColumns;
+	}
+
+	private getDisplayedColumnsByScalingType(
+		scalingType: ScalingTypesEnum
+	): Array<string> {
+		let columns: Array<string> = [];
+
+		switch (scalingType) {
+			case ScalingTypesEnum.Circular:
+				columns = ['id', 'cpuTime', 'processTimeToFinish'];
+				break;
+			case ScalingTypesEnum.CircularWithPriorities:
+				columns = ['id', 'priority', 'cpuTime', 'processTimeToFinish'];
+				break;
+			default:
+				break;
+		}
+
+		return columns;
+	}
+
 	@Action(Processes.PickScalingType)
 	pickScalingType(
 		context: StateContext<ProcessesStateModel>,
@@ -134,6 +163,9 @@ export class ProcessesState {
 	) {
 		context.patchState({
 			scalingType: action.scalingType,
+			displayedColumns: this.getDisplayedColumnsByScalingType(
+				action.scalingType
+			),
 		});
 
 		context.dispatch([
@@ -622,7 +654,7 @@ export class ProcessesState {
 		const coolDown = (state.timeSlice / state.cpuClock) * 1000;
 
 		if (!state.data.length) {
-			this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
+			this.runCPUInterval(Math.min(1000, coolDown), context);
 
 			return;
 		}

@@ -99,12 +99,12 @@
 					</td>
 				</ng-container>
 
-				<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+				<tr mat-header-row *matHeaderRowDef="displayedColumns$ | async"></tr>
 				<tr
 					class="process-row"
 					(click)="editProcess(row)"
 					mat-row
-					*matRowDef="let row; columns: displayedColumns"
+					*matRowDef="let row; columns: displayedColumns$ | async"
 				></tr>
 			</table>
 		</div>
@@ -262,7 +262,7 @@
 			</td>
 		</ng-container>
 
-		<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+		<tr mat-header-row *matHeaderRowDef="finishedDisplayedColumns"></tr>
 		<tr
 			[ngClass]="{
 				'process-row': isProcessSuspended(row),
@@ -270,7 +270,7 @@
 			}"
 			(click)="editProcess(row)"
 			mat-row
-			*matRowDef="let row; columns: displayedColumns"
+			*matRowDef="let row; columns: finishedDisplayedColumns"
 		></tr>
 	</table>
 </div>
