@@ -77,6 +77,11 @@ export class ProcessesState {
 
 	@Selector()
 	static getFinishedProcesses(state: ProcessesStateModel) {
+		return state.data.filter(({ state }) => state === ProcessStates.finished);
+	}
+
+	@Selector()
+	static getSuspendedAndFinishedProcesses(state: ProcessesStateModel) {
 		const suspendedProcesses = state.data.filter(
 			({ state }) => state === ProcessStates.suspended
 		);
@@ -136,6 +141,11 @@ export class ProcessesState {
 	@Selector()
 	static getDisplayedColumns(state: ProcessesStateModel) {
 		return state.displayedColumns;
+	}
+
+	@Selector()
+	static getSuspendedFinishedColumns(state: ProcessesStateModel) {
+		return [...state.displayedColumns, 'processTimeToFinish'];
 	}
 
 	private getDisplayedColumnsByScalingType(
