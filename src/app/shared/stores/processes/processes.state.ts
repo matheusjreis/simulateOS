@@ -173,7 +173,6 @@ export class ProcessesState {
 			new Processes.StopProcesses(),
 			new Processes.RunIO(),
 			new Processes.RunCPU(),
-			new Logs.ClearLogs(),
 		]);
 	}
 
@@ -197,6 +196,10 @@ export class ProcessesState {
 							data: [...state.data, ...res],
 							colors: ProcessColors,
 						});
+
+						res.forEach((createdProcess) =>
+							context.dispatch([new Logs.CreateLog(createdProcess)])
+						);
 					})
 				);
 		} else {
@@ -216,6 +219,10 @@ export class ProcessesState {
 							data: [...state.data],
 							colors: ProcessColors,
 						});
+
+						res.forEach((createdProcess) =>
+							context.dispatch([new Logs.CreateLog(createdProcess)])
+						);
 					})
 				);
 		}
@@ -362,7 +369,11 @@ export class ProcessesState {
 				item.isAvailable = state.colors[index].isAvailable;
 			});
 
-		context.dispatch([new Processes.RunIO(), new Processes.RunCPU()]);
+		context.dispatch([
+			new Processes.RunIO(),
+			new Processes.RunCPU(),
+			new Logs.ClearLogs(),
+		]);
 	}
 
 	private runCPUInterval(
@@ -422,12 +433,13 @@ export class ProcessesState {
 						data: [...dataWithoutExecutingProcess, currentExecutingProcess],
 					});
 
-					context.dispatch(
+					context.dispatch([
 						new Processes.UpdateProcessState(
 							currentExecutingProcess,
 							ProcessStates.finished
-						)
-					);
+						),
+						new Logs.CreateLog(currentExecutingProcess),
+					]);
 
 					this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
 
@@ -484,9 +496,10 @@ export class ProcessesState {
 				data: [...dataWithoutFirstProcess, firstProcess],
 			});
 
-			context.dispatch(
-				new Processes.UpdateProcessState(firstProcess, ProcessStates.execution)
-			);
+			context.dispatch([
+				new Processes.UpdateProcessState(firstProcess, ProcessStates.execution),
+				new Logs.CreateLog(firstProcess),
+			]);
 		}
 
 		this.runCPUInterval(coolDown, context);
@@ -529,12 +542,13 @@ export class ProcessesState {
 						data: [...dataWithoutExecutingProcess, currentExecutingProcess],
 					});
 
-					context.dispatch(
+					context.dispatch([
 						new Processes.UpdateProcessState(
 							currentExecutingProcess,
 							ProcessStates.finished
-						)
-					);
+						),
+						new Logs.CreateLog(currentExecutingProcess),
+					]);
 
 					this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
 
@@ -615,12 +629,13 @@ export class ProcessesState {
 			);
 
 			if (processesWithHighestPriority.length)
-				context.dispatch(
+				context.dispatch([
 					new Processes.UpdateProcessState(
 						processesWithHighestPriority[0],
 						ProcessStates.execution
-					)
-				);
+					),
+					new Logs.CreateLog(processesWithHighestPriority[0]),
+				]);
 
 			const isIo =
 				processesWithHighestPriority[0].type !== ProcessTypes.cpuBound;
@@ -769,6 +784,8 @@ export class ProcessesState {
 			colors: ProcessColors,
 			timer: 0,
 		});
+
+		context.dispatch([new Logs.ClearLogs()]);
 	}
 
 	ioProcessLeftExecution(
