@@ -42,10 +42,6 @@ export class LogsState {
 
 	@Action(Logs.ClearLogs)
 	clearLogs(context: StateContext<LogsStateModel>) {
-		const state = context.getState();
-
-		console.log({ state });
-
 		context.patchState({ data: [] });
 	}
 }
