@@ -21,7 +21,7 @@ import { ProcessesState } from './shared/stores/processes/processes.state';
 		HttpClientModule,
 		MatNativeDateModule,
 		NgxsStoragePluginModule.forRoot({
-			key: ['processes', 'logs'],
+			key: [ProcessesState, LogsState],
 		}),
 		NgxsModule.forRoot([ProcessesState, LogsState]),
 		NgxsLoggerPluginModule.forRoot(),
