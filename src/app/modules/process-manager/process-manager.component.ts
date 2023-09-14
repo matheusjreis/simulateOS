@@ -20,6 +20,7 @@ import { Processes } from 'src/app/shared/stores/processes/processes.actions';
 import { ProcessesState } from 'src/app/shared/stores/processes/processes.state';
 import { CreateProcessDialogComponent } from './components/create-process-dialog/create-process-dialog.component';
 import { EditProcessDialogComponent } from './components/edit-process-dialog/edit-process-dialog.component';
+import { ProcessLifetimeDialogComponent } from './components/process-lifetime-dialog/process-lifetime-dialog.component';
 import { UpdatePriorityDialogComponent } from './components/update-priority-dialog/update-priority-dialog.component';
 
 @Component({
@@ -37,13 +38,15 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	@Select(ProcessesState.getReadyProcesses) readyProcesses$!: Observable<
 		Process[]
 	>;
-	@Select(ProcessesState.getFinishedProcesses)
-	finishedProcesses$!: Observable<Process[]>;
+	@Select(ProcessesState.getSuspendedAndFinishedProcesses)
+	suspendedFinishedProcesses$!: Observable<Process[]>;
 	@Select(ProcessesState.getIOQueueProcesses) iOProcesses$!: Observable<
 		Process[]
 	>;
 	@Select(ProcessesState.getDisplayedColumns)
 	displayedColumns$!: Observable<Array<string>>;
+	@Select(ProcessesState.getFinishedProcesses)
+	finishedProcesses$!: Observable<Array<string>>;
 
 	@ViewChild(MatMenuTrigger) actionsMenu!: MatMenuTrigger;
 	displayedColumnsIO: string[] = ['id'];
@@ -56,12 +59,6 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	executingProcess?: Process;
 	ioProcess?: Process;
 	maxProcesses = 15;
-	finishedDisplayedColumns = [
-		'id',
-		'priority',
-		'cpuTime',
-		'processTimeToFinish',
-	];
 
 	constructor(private dialog: MatDialog, private store: Store) {}
 
@@ -168,5 +165,11 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 
 	isProcessSuspended(process: Process) {
 		return process.state === ProcessStates.suspended;
+	}
+
+	handleOpenProcessLifetimeDialog(): void {
+		this.dialog.open(ProcessLifetimeDialogComponent, {
+			width: '800px',
+		});
 	}
 }

@@ -159,26 +159,6 @@
 					</td>
 				</ng-container>
 
-				<!-- <ng-container matColumnDef="priority">
-                    <th
-                        style="text-align: center"
-                        mat-header-cell
-                        *matHeaderCellDef
-                    >
-                        Prioridade
-                    </th>
-                    <td
-                        style="
-                            background-color: rgba(255, 0, 0, 0.1);
-                            text-align: center;
-                        "
-                        mat-cell
-                        *matCellDef="let process"
-                    >
-                        {{ process.priority }}
-                    </td>
-                </ng-container> -->
-
 				<ng-container matColumnDef="cpuTime">
 					<th style="text-align: center" mat-header-cell *matHeaderCellDef>
 						Tempo de CPU
@@ -199,9 +179,24 @@
 		</div>
 	</div>
 
+	<div
+		*ngIf="(finishedProcesses$ | async)?.length !== 0"
+		class="process-lifetime-dialog-button-block"
+	>
+		<div>
+			<button
+				mat-raised-button
+				color="primary"
+				(click)="handleOpenProcessLifetimeDialog()"
+			>
+				Gerar gráfico de tempo de vida
+			</button>
+		</div>
+	</div>
+
 	<table
 		mat-table
-		[dataSource]="finishedProcesses$"
+		[dataSource]="suspendedFinishedProcesses$"
 		class="process-manager__table"
 	>
 		<ng-container matColumnDef="id">
@@ -262,7 +257,7 @@
 			</td>
 		</ng-container>
 
-		<tr mat-header-row *matHeaderRowDef="finishedDisplayedColumns"></tr>
+		<tr mat-header-row *matHeaderRowDef="displayedColumns$ | async"></tr>
 		<tr
 			[ngClass]="{
 				'process-row': isProcessSuspended(row),
@@ -270,7 +265,7 @@
 			}"
 			(click)="editProcess(row)"
 			mat-row
-			*matRowDef="let row; columns: finishedDisplayedColumns"
+			*matRowDef="let row; columns: displayedColumns$ | async"
 		></tr>
 	</table>
 </div>
