@@ -1,9 +1,9 @@
-import { Process } from '../../models/process';
+import { CreateLogDTO } from '../../models/log';
 
 export namespace Logs {
 	export class CreateLog {
 		static readonly type = '[Logs] Create Log';
-		constructor(public process: Process) {}
+		constructor(public createLog: CreateLogDTO) {}
 	}
 
 	export class ClearLogs {

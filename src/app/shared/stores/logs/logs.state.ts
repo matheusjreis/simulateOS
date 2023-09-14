@@ -25,13 +25,10 @@ export class LogsState {
 	}
 
 	@Action(Logs.CreateLog)
-	createLog(
-		context: StateContext<LogsStateModel>,
-		{ process }: Logs.CreateLog
-	) {
+	createLog(context: StateContext<LogsStateModel>, action: Logs.CreateLog) {
 		const state = context.getState();
 
-		return this.logsService.createLog({ process }).pipe(
+		return this.logsService.createLog(action.createLog).pipe(
 			tap((createdLog) => {
 				context.patchState({
 					data: [...state.data, createdLog],
