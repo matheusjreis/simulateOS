@@ -143,11 +143,6 @@ export class ProcessesState {
 		return state.displayedColumns;
 	}
 
-	@Selector()
-	static getSuspendedFinishedColumns(state: ProcessesStateModel) {
-		return [...state.displayedColumns, 'processTimeToFinish'];
-	}
-
 	private getDisplayedColumnsByScalingType(
 		scalingType: ScalingTypesEnum
 	): Array<string> {
@@ -206,10 +201,6 @@ export class ProcessesState {
 							data: [...state.data, ...res],
 							colors: ProcessColors,
 						});
-
-						res.forEach((createdProcess) =>
-							context.dispatch([new Logs.CreateLog(createdProcess)])
-						);
 					})
 				);
 		} else {
@@ -229,10 +220,6 @@ export class ProcessesState {
 							data: [...state.data],
 							colors: ProcessColors,
 						});
-
-						res.forEach((createdProcess) =>
-							context.dispatch([new Logs.CreateLog(createdProcess)])
-						);
 					})
 				);
 		}
@@ -388,10 +375,14 @@ export class ProcessesState {
 
 	private runCPUInterval(
 		coolDown: number,
-		context: StateContext<ProcessesStateModel>
+		context: StateContext<ProcessesStateModel>,
+		sendCoolDown?: boolean
 	): void {
 		this.cpuTimerInterval = setInterval(() => {
-			this.runCPU(context);
+			this.runCPU(
+				context,
+				sendCoolDown ? new Processes.RunCPU(coolDown) : undefined
+			);
 		}, coolDown);
 	}
 
@@ -422,6 +413,16 @@ export class ProcessesState {
 				(item) => item.id !== currentExecutingProcess.id
 			);
 
+			context.dispatch(
+				new Logs.CreateLog({
+					process: {
+						...currentExecutingProcess,
+						state: ProcessStates.execution,
+					},
+					timer: state.timer,
+				})
+			);
+
 			const executingProcessType = this.getProcessType(
 				currentExecutingProcess.type
 			);
@@ -448,20 +449,32 @@ export class ProcessesState {
 							currentExecutingProcess,
 							ProcessStates.finished
 						),
-						new Logs.CreateLog(currentExecutingProcess),
+						new Logs.CreateLog({
+							process: {
+								...currentExecutingProcess,
+								state: ProcessStates.finished,
+							},
+							timer: state.timer + incrementValue,
+						}),
 					]);
 
-					this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
+					coolDown = incrementValue * 1000;
+
+					this.runCPUInterval(coolDown, context, true);
 
 					return;
 				}
 
-				context.dispatch(
+				context.dispatch([
 					new Processes.UpdateProcessState(
 						currentExecutingProcess,
 						ProcessStates.ready
-					)
-				);
+					),
+					new Logs.CreateLog({
+						process: { ...currentExecutingProcess, state: ProcessStates.ready },
+						timer: state.timer + incrementValue,
+					}),
+				]);
 			} else {
 				currentExecutingProcess.cpuTime += 1;
 
@@ -474,12 +487,19 @@ export class ProcessesState {
 					data: [...data],
 				});
 
-				context.dispatch(
+				context.dispatch([
 					new Processes.UpdateProcessState(
 						currentExecutingProcess,
 						ProcessStates.readyIo
-					)
-				);
+					),
+					new Logs.CreateLog({
+						process: {
+							...currentExecutingProcess,
+							state: ProcessStates.readyIo,
+						},
+						timer: state.timer + 1,
+					}),
+				]);
 			}
 
 			coolDown =
@@ -506,10 +526,9 @@ export class ProcessesState {
 				data: [...dataWithoutFirstProcess, firstProcess],
 			});
 
-			context.dispatch([
-				new Processes.UpdateProcessState(firstProcess, ProcessStates.execution),
-				new Logs.CreateLog(firstProcess),
-			]);
+			context.dispatch(
+				new Processes.UpdateProcessState(firstProcess, ProcessStates.execution)
+			);
 		}
 
 		this.runCPUInterval(coolDown, context);
@@ -557,10 +576,13 @@ export class ProcessesState {
 							currentExecutingProcess,
 							ProcessStates.finished
 						),
-						new Logs.CreateLog(currentExecutingProcess),
+						new Logs.CreateLog({
+							process: currentExecutingProcess,
+							timer: state.timer,
+						}),
 					]);
 
-					this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
+					this.runCPUInterval(coolDown, context);
 
 					return;
 				}
@@ -624,7 +646,7 @@ export class ProcessesState {
 					state.timeSlice
 				) * 1000;
 
-			this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
+			this.runCPUInterval(coolDown, context);
 		} else {
 			const highestPriority = state.data
 				.filter((item) => item.state === ProcessStates.ready)
@@ -644,7 +666,10 @@ export class ProcessesState {
 						processesWithHighestPriority[0],
 						ProcessStates.execution
 					),
-					new Logs.CreateLog(processesWithHighestPriority[0]),
+					new Logs.CreateLog({
+						process: processesWithHighestPriority[0],
+						timer: state.timer,
+					}),
 				]);
 
 			const isIo =
@@ -674,11 +699,15 @@ export class ProcessesState {
 	}
 
 	@Action(Processes.RunCPU)
-	runCPU(context: StateContext<ProcessesStateModel>) {
+	runCPU(
+		context: StateContext<ProcessesStateModel>,
+		action?: Processes.RunCPU
+	) {
 		clearInterval(this.cpuTimerInterval);
 		const state = context.getState();
 
-		const coolDown = (state.timeSlice / state.cpuClock) * 1000;
+		const coolDown =
+			action?.coolDown || (state.timeSlice / state.cpuClock) * 1000;
 
 		if (!state.data.length) {
 			this.runCPUInterval(Math.min(1000, coolDown), context);
@@ -695,7 +724,7 @@ export class ProcessesState {
 		);
 
 		if (!readyProcesses.length && !currentExecutingProcess) {
-			this.runCPUInterval(coolDown > 1000 ? 1000 : coolDown, context);
+			this.runCPUInterval(coolDown, context);
 
 			return;
 		}

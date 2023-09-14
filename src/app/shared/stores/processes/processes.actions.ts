@@ -50,7 +50,7 @@ export namespace Processes {
 
 	export class RunCPU {
 		static readonly type = '[Processes] Run CPU';
-		constructor() {}
+		constructor(public coolDown?: number) {}
 	}
 
 	export class RunIO {
