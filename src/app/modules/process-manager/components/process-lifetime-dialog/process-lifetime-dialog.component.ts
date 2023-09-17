@@ -149,6 +149,7 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 			plotOptions: {
 				bar: {
 					horizontal: true,
+					barHeight: '40px',
 				},
 			},
 			dataLabels: {
