@@ -42,13 +42,12 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 	subscription = new Subscription();
 	@Select(ProcessesState.getFinishedProcesses)
 	getFinishedProcesses$!: Observable<Array<Process>>;
-	@Select(ProcessesState.getSuspendedFinishedColumns)
-	suspendedFinishedColumns$!: Observable<Array<string>>;
+	@Select(ProcessesState.getDisplayedColumns)
+	displayedColumns$!: Observable<string>;
 	@Select(LogsState.getLogs)
 	logs$!: Observable<Array<Log>>;
 	finishedProcesses: Array<CustomProcess> = [];
 	logs: Array<Log> = [];
-	displayedColumns: Array<string> = [];
 	chartOptions: ChartOptions | null = null;
 
 	constructor(
@@ -63,12 +62,6 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 					checked: false,
 				}));
 			})
-		);
-
-		this.subscription.add(
-			this.suspendedFinishedColumns$.subscribe(
-				(columns) => (this.displayedColumns = ['check', ...columns])
-			)
 		);
 
 		this.subscription.add(
