@@ -39,8 +39,6 @@ export interface ProcessesStateModel {
 })
 @Injectable()
 export class ProcessesState {
-	ioTimerInterval: any;
-	cpuTimerInterval: any;
 	constructor(private processesService: ProcessesService) {}
 
 	@Selector()
@@ -174,11 +172,10 @@ export class ProcessesState {
 			),
 		});
 
-		context.dispatch([
-			new Processes.StopProcesses(),
-			new Processes.RunIO(),
-			new Processes.RunCPU(),
-		]);
+		context.dispatch(new Processes.StopProcesses());
+
+		this.runCPU(context);
+		this.runIO(context);
 	}
 
 	@Action(Processes.CreateProcess)
@@ -307,9 +304,7 @@ export class ProcessesState {
 
 		data[index] = { ...action.process, priority: action.priority };
 
-		context.patchState({
-			data: [...data],
-		});
+		context.patchState({ data: [...data] });
 	}
 
 	@Action(Processes.SetIOWaitTime)
@@ -317,11 +312,7 @@ export class ProcessesState {
 		context: StateContext<ProcessesStateModel>,
 		action: Processes.SetIOWaitTime
 	) {
-		const state = context.getState();
-
-		context.patchState({
-			ioWaitTime: action.time,
-		});
+		context.patchState({ ioWaitTime: action.time });
 	}
 
 	@Action(Processes.SetTimeSlice)
@@ -329,11 +320,7 @@ export class ProcessesState {
 		context: StateContext<ProcessesStateModel>,
 		action: Processes.SetTimeSlice
 	) {
-		const state = context.getState();
-
-		context.patchState({
-			timeSlice: action.time,
-		});
+		context.patchState({ timeSlice: action.time });
 	}
 
 	@Action(Processes.SetCpuClock)
@@ -341,11 +328,7 @@ export class ProcessesState {
 		context: StateContext<ProcessesStateModel>,
 		action: Processes.SetCpuClock
 	) {
-		const state = context.getState();
-
-		context.patchState({
-			cpuClock: action.clock,
-		});
+		context.patchState({ cpuClock: action.clock });
 	}
 
 	@Action(Processes.IncrementTimer)
@@ -355,6 +338,9 @@ export class ProcessesState {
 		context.patchState({
 			timer: state.timer + state.cpuClock,
 		});
+
+		this.runCPU(context);
+		this.runIO(context);
 	}
 
 	@Action(Processes.StartIOTimer)
@@ -366,24 +352,8 @@ export class ProcessesState {
 				item.isAvailable = state.colors[index].isAvailable;
 			});
 
-		context.dispatch([
-			new Processes.RunIO(),
-			new Processes.RunCPU(),
-			new Logs.ClearLogs(),
-		]);
-	}
-
-	private runCPUInterval(
-		coolDown: number,
-		context: StateContext<ProcessesStateModel>,
-		sendCoolDown?: boolean
-	): void {
-		this.cpuTimerInterval = setInterval(() => {
-			this.runCPU(
-				context,
-				sendCoolDown ? new Processes.RunCPU(coolDown) : undefined
-			);
-		}, coolDown);
+		this.runCPU(context);
+		this.runIO(context);
 	}
 
 	private getProcessType(type: ProcessTypesType): ProcessTypesType {
@@ -391,8 +361,7 @@ export class ProcessesState {
 			const types = [ProcessTypes.cpuBound, ProcessTypes.ioBound];
 
 			return types[Math.floor(Math.random() * types.length)];
-		}
-		{
+		} else {
 			return type;
 		}
 	}
@@ -460,8 +429,6 @@ export class ProcessesState {
 
 					coolDown = incrementValue * 1000;
 
-					this.runCPUInterval(coolDown, context, true);
-
 					return;
 				}
 
@@ -512,11 +479,7 @@ export class ProcessesState {
 				({ state }) => state === ProcessStates.ready
 			);
 
-			if (!firstProcess) {
-				this.runCPUInterval(coolDown, context);
-
-				return;
-			}
+			if (!firstProcess) return;
 
 			const dataWithoutFirstProcess = state.data.filter(
 				(item) => item.id !== firstProcess.id
@@ -530,8 +493,6 @@ export class ProcessesState {
 				new Processes.UpdateProcessState(firstProcess, ProcessStates.execution)
 			);
 		}
-
-		this.runCPUInterval(coolDown, context);
 	}
 
 	private runCPUByCircularWithPrioritiesType(
@@ -581,8 +542,6 @@ export class ProcessesState {
 							timer: state.timer,
 						}),
 					]);
-
-					this.runCPUInterval(coolDown, context);
 
 					return;
 				}
@@ -645,8 +604,6 @@ export class ProcessesState {
 					currentExecutingProcess.processTimeToFinish - state.timer,
 					state.timeSlice
 				) * 1000;
-
-			this.runCPUInterval(coolDown, context);
 		} else {
 			const highestPriority = state.data
 				.filter((item) => item.state === ProcessStates.ready)
@@ -676,8 +633,6 @@ export class ProcessesState {
 				processesWithHighestPriority[0].type !== ProcessTypes.cpuBound;
 
 			coolDown = isIo ? 1 : (state.timeSlice / state.cpuClock) * 1000;
-
-			this.runCPUInterval(coolDown, context);
 		}
 	}
 
@@ -698,22 +653,12 @@ export class ProcessesState {
 		}
 	}
 
-	@Action(Processes.RunCPU)
-	runCPU(
-		context: StateContext<ProcessesStateModel>,
-		action?: Processes.RunCPU
-	) {
-		clearInterval(this.cpuTimerInterval);
+	private runCPU(context: StateContext<ProcessesStateModel>) {
 		const state = context.getState();
 
-		const coolDown =
-			action?.coolDown || (state.timeSlice / state.cpuClock) * 1000;
+		const coolDown = (state.timeSlice / state.cpuClock) * 1000;
 
-		if (!state.data.length) {
-			this.runCPUInterval(Math.min(1000, coolDown), context);
-
-			return;
-		}
+		if (!state.data.length) return;
 
 		const readyProcesses = state.data.filter(
 			(item) => item.state === ProcessStates.ready
@@ -723,27 +668,15 @@ export class ProcessesState {
 			(item) => item.state === ProcessStates.execution
 		);
 
-		if (!readyProcesses.length && !currentExecutingProcess) {
-			this.runCPUInterval(coolDown, context);
-
-			return;
-		}
+		if (!readyProcesses.length && !currentExecutingProcess) return;
 
 		this.runCPUByScalingType(context);
 	}
 
-	@Action(Processes.RunIO)
-	runIO(context: StateContext<ProcessesStateModel>) {
-		clearInterval(this.ioTimerInterval);
+	private runIO(context: StateContext<ProcessesStateModel>) {
 		const state = context.getState();
 
-		if (!state.data.length) {
-			this.ioTimerInterval = setInterval(() => {
-				this.runIO(context);
-			}, 1000);
-
-			return;
-		}
+		if (!state.data.length) return;
 
 		const readyIOProcesses = state.data.filter(
 			(item) => item.state === ProcessStates.readyIo
@@ -753,13 +686,7 @@ export class ProcessesState {
 			(item) => item.state === ProcessStates.io
 		);
 
-		if (!readyIOProcesses.length && !currentIOProcess) {
-			this.ioTimerInterval = setInterval(() => {
-				this.runIO(context);
-			}, 1000);
-
-			return;
-		}
+		if (!readyIOProcesses.length && !currentIOProcess) return;
 
 		if (currentIOProcess) {
 			const dataWithoutIOProcess = state.data.filter(
@@ -793,10 +720,6 @@ export class ProcessesState {
 			context.dispatch(
 				new Processes.UpdateProcessState(currentIOProcess, ProcessStates.ready)
 			);
-
-			this.ioTimerInterval = setInterval(() => {
-				this.runIO(context);
-			}, 100);
 		} else {
 			if (readyIOProcesses.length)
 				context.dispatch(
@@ -805,10 +728,6 @@ export class ProcessesState {
 						ProcessStates.io
 					)
 				);
-
-			this.ioTimerInterval = setInterval(() => {
-				this.runIO(context);
-			}, state.ioWaitTime * 1000);
 		}
 	}
 
@@ -826,10 +745,4 @@ export class ProcessesState {
 
 		context.dispatch([new Logs.ClearLogs()]);
 	}
-
-	ioProcessLeftExecution(
-		process: Process,
-		context: StateContext<ProcessesStateModel>,
-		state: ProcessesStateModel
-	) {}
 }

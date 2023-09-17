@@ -48,16 +48,6 @@ export namespace Processes {
 		constructor(public clock: number) {}
 	}
 
-	export class RunCPU {
-		static readonly type = '[Processes] Run CPU';
-		constructor(public coolDown?: number) {}
-	}
-
-	export class RunIO {
-		static readonly type = '[Processes] Run IO';
-		constructor() {}
-	}
-
 	export class StopProcesses {
 		static readonly type = '[Processes] Stop Processes';
 		constructor() {}
