@@ -104,59 +104,52 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 			[]
 		);
 
-		debugger;
+		const data: Array<{
+			x: string;
+			y: Array<number>;
+		}> = [];
 
-		this.chartOptions = {
-			series: [
-				{
-					name: 'Tempo de Vida',
-					data: [
-						{
-							x: 'Design',
-							y: [
-								new Date('2019-03-05').getTime(),
-								new Date('2019-03-08').getTime(),
-							],
-						},
-						{
-							x: 'Code',
-							y: [
-								new Date('2019-03-02').getTime(),
-								new Date('2019-03-05').getTime(),
-							],
-						},
-						{
-							x: 'Code',
-							y: [
-								new Date('2019-03-08').getTime(),
-								new Date('2019-03-11').getTime(),
-							],
-						},
-						{
-							x: 'Test',
-							y: [
-								new Date('2019-03-11').getTime(),
-								new Date('2019-03-16').getTime(),
-							],
-						},
-					],
+		logsByPID.forEach((logs) => {
+			const logsHalfSize = Math.floor(logs.length / 2);
+
+			if (!(logsHalfSize % 2 == 0)) return;
+
+			for (let i = 0; i < logsHalfSize; i++) {
+				const start = logs[i * 2].currentTime;
+				const end = logs[i * 2 + 1].currentTime;
+
+				const process = logs[i * 2].process;
+
+				data.push({
+					x: `PID ${process.id}`,
+					y: [start, end],
+				});
+			}
+		});
+
+		setTimeout(() => {
+			this.chartOptions = {
+				series: [
+					{
+						name: 'Tempo de Vida',
+						data,
+					},
+				],
+				chart: {
+					height: '200px',
+					type: 'rangeBar',
 				},
-			],
-			chart: {
-				height: '200px',
-				type: 'rangeBar',
-			},
-			plotOptions: {
-				bar: {
-					horizontal: true,
-					barHeight: '40px',
+				plotOptions: {
+					bar: {
+						horizontal: true,
+						barHeight: '40px',
+					},
 				},
-			},
-			dataLabels: {
-				enabled: true,
-				formatter: (a: number, b: number) => b - a,
-			},
-		};
+				dataLabels: {
+					enabled: true,
+				},
+			};
+		}, 0);
 	}
 
 	getTypeName(type: ProcessTypesType): string {
