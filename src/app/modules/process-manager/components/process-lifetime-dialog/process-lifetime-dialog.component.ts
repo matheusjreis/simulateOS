@@ -43,10 +43,11 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 	@Select(ProcessesState.getFinishedProcesses)
 	getFinishedProcesses$!: Observable<Array<Process>>;
 	@Select(ProcessesState.getDisplayedColumns)
-	displayedColumns$!: Observable<string>;
+	getDisplayedColumns$!: Observable<string>;
 	@Select(LogsState.getLogs)
 	logs$!: Observable<Array<Log>>;
 	finishedProcesses: Array<CustomProcess> = [];
+	displayedColumns: Array<string> = [];
 	logs: Array<Log> = [];
 	chartOptions: ChartOptions | null = null;
 
@@ -54,7 +55,17 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 		private readonly dialogRef: MatDialogRef<ProcessLifetimeDialogComponent>
 	) {}
 
+	get isAllProcessesChecked(): boolean {
+		return this.finishedProcesses.every(({ checked }) => checked);
+	}
+
 	private getFinishedProcesses(): void {
+		this.subscription.add(
+			this.getDisplayedColumns$.subscribe(
+				(value) => (this.displayedColumns = ['check', ...value])
+			)
+		);
+
 		this.subscription.add(
 			this.getFinishedProcesses$.pipe(take(1)).subscribe((processes) => {
 				this.finishedProcesses = processes.map((process) => ({
@@ -136,7 +147,9 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 				type: 'rangeBar',
 			},
 			plotOptions: {
-				bar: { horizontal: true },
+				bar: {
+					horizontal: true,
+				},
 			},
 			dataLabels: {
 				enabled: true,
@@ -153,6 +166,15 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 		const process = this.finishedProcesses[processIndex];
 
 		process.checked = event.checked;
+	}
+
+	onCheckAll(event: MatCheckboxChange): void {
+		const aux = this.finishedProcesses.map((process) => ({
+			...process,
+			checked: event.checked,
+		}));
+
+		this.finishedProcesses = [...aux];
 	}
 
 	onClose() {

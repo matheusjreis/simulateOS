@@ -1,3 +1,13 @@
+header {
+	position: relative;
+
+	.close-button {
+		position: absolute;
+		top: 0;
+		right: 0;
+	}
+}
+
 .process-manager {
 	&__table {
 		width: 100%;

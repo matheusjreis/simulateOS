@@ -2,6 +2,10 @@
 	<h1 mat-dialog-title style="text-align: center">
 		Tempo de Vida dos Processos
 	</h1>
+
+	<button mat-icon-button mat-dialog-close class="close-button">
+		<mat-icon>close</mat-icon>
+	</button>
 </header>
 
 <section mat-dialog-content>
@@ -22,14 +26,23 @@
 				class="process-manager__table"
 			>
 				<ng-container matColumnDef="check">
-					<th mat-header-cell *matHeaderCellDef></th>
+					<th mat-header-cell *matHeaderCellDef>
+						<mat-checkbox
+							class="mx-3"
+							color="primary"
+							(click)="$event.stopPropagation()"
+							(change)="onCheckAll($event)"
+							[checked]="isAllProcessesChecked"
+						></mat-checkbox>
+					</th>
+
 					<td mat-cell *matCellDef="let process; let i = index">
 						<mat-checkbox
 							class="mx-3"
 							color="primary"
 							(click)="$event.stopPropagation()"
 							(change)="onCheck($event, i)"
-							[value]="process.checked"
+							[checked]="process.checked"
 						></mat-checkbox>
 					</td>
 				</ng-container>
@@ -83,11 +96,8 @@
 					</td>
 				</ng-container>
 
-				<tr mat-header-row *matHeaderRowDef="displayedColumns$ | async"></tr>
-				<tr
-					mat-row
-					*matRowDef="let row; columns: displayedColumns$ | async"
-				></tr>
+				<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+				<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 			</table>
 		</div>
 	</div>
