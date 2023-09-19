@@ -45,8 +45,8 @@ export class ProcessesService {
 		time: number
 	): Observable<Process[]> {
 		return from(Array.from(Array(process.number).keys())).pipe(
-			concatMap((index) => {
-				const item = {
+			concatMap((index) =>
+				of({
 					id: this.generateId(),
 					priority: process.priority,
 					color: this.generateColor(process.color, index),
@@ -55,9 +55,9 @@ export class ProcessesService {
 					cpuTime: 0,
 					timeCreated: time,
 					processTimeToFinish: process.processTimeToFinish,
-				};
-				return of(item).pipe(delay(50));
-			}),
+					executingTime: 0,
+				}).pipe(delay(50))
+			),
 			toArray()
 		);
 	}

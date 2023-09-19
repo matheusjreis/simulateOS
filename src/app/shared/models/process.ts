@@ -11,6 +11,7 @@ export interface Process {
 	timeCreated: number;
 	timeDeleted?: number;
 	processTimeToFinish: number;
+	executingTime: number;
 }
 
 export interface CreateProcessDTO {
