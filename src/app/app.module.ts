@@ -4,9 +4,9 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgxsReduxDevtoolsPluginModule } from '@ngxs/devtools-plugin';
-import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
 import { NgxsStoragePluginModule } from '@ngxs/storage-plugin';
 import { NgxsModule } from '@ngxs/store';
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LogsState } from './shared/stores/logs/logs.state';
@@ -24,7 +24,7 @@ import { ProcessesState } from './shared/stores/processes/processes.state';
 			key: [ProcessesState, LogsState],
 		}),
 		NgxsModule.forRoot([ProcessesState, LogsState]),
-		NgxsLoggerPluginModule.forRoot(),
+		// NgxsLoggerPluginModule.forRoot(),
 		NgxsReduxDevtoolsPluginModule.forRoot(),
 	],
 	providers: [],
