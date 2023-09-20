@@ -110,9 +110,9 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 		}> = [];
 
 		logsByPID.forEach((logs) => {
-			const logsHalfSize = Math.floor(logs.length / 2);
+			if (!(logs.length % 2 == 0)) return;
 
-			if (!(logsHalfSize % 2 == 0)) return;
+			const logsHalfSize = Math.floor(logs.length / 2);
 
 			for (let i = 0; i < logsHalfSize; i++) {
 				const start = logs[i * 2].currentTime;
