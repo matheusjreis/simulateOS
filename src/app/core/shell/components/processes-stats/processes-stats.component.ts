@@ -22,6 +22,8 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 	@Select(ProcessesState.getIOWaitTime) ioWaitTime$!: Observable<number>;
 	@Select(ProcessesState.getTimeSlice) timeSlice$!: Observable<number>;
 	@Select(ProcessesState.getCpuClock) cpuClock$!: Observable<number>;
+	@Select(ProcessesState.getCurrentScalingType)
+	scalingType$!: Observable<ScalingTypesEnum>;
 	private subscriptions: Subscription = new Subscription();
 	ioWaitTime?: number;
 	timeSlice?: number;

@@ -12,12 +12,19 @@
 			</div>
 		</div>
 
+		<div>
+			<div class="processes-stats__title">Escalonamento</div>
+			<div class="processes-stats__content">
+				{{ scalingType$ | async | scalingTypeDescription }}
+			</div>
+		</div>
+
 		<button
 			mat-raised-button
 			color="primary"
 			(click)="handleOpenSelectScalingType()"
 		>
-			Tipo de Escalonamento
+			Escolher Escalonamento
 		</button>
 	</div>
 

@@ -6,7 +6,9 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSliderModule } from '@angular/material/slider';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { SharedModule } from 'src/app/shared/shared.module';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { PickScalingTypeDialogComponent } from './components/pick-scaling-type-dialog/pick-scaling-type-dialog.component';
 import { ProcessesStatsComponent } from './components/processes-stats/processes-stats.component';
@@ -16,6 +18,7 @@ import { ShellComponent } from './shell.component';
 @NgModule({
 	imports: [
 		CommonModule,
+		SharedModule,
 		ShellRoutingModule,
 		MatButtonModule,
 		MatSliderModule,
@@ -24,6 +27,7 @@ import { ShellComponent } from './shell.component';
 		ReactiveFormsModule,
 		MatSelectModule,
 		MatFormFieldModule,
+		MatInputModule,
 	],
 	declarations: [
 		ShellComponent,
