@@ -286,7 +286,11 @@ export class ProcessesState {
 		const data = state.data;
 		const index = data.findIndex((item) => item.id === action.process.id);
 
-		data[index] = { ...action.process, state: action.state };
+		const updatedProcess: Process = { ...action.process, state: action.state };
+
+		data[index] = updatedProcess;
+
+		// TODO: verificar se a criação do log pode ser aqui, pelo menos pra x estados de processo
 
 		context.patchState({
 			data: [...data],
@@ -357,13 +361,181 @@ export class ProcessesState {
 	}
 
 	private getProcessType(type: ProcessTypesType): ProcessTypesType {
+		let value = type;
+
 		if (type === ProcessTypes.cpuAndIoBound) {
 			const types = [ProcessTypes.cpuBound, ProcessTypes.ioBound];
 
-			return types[Math.floor(Math.random() * types.length)];
-		} else {
-			return type;
+			type = types[Math.floor(Math.random() * types.length)];
 		}
+
+		return value;
+	}
+
+	private runCircularProcess(
+		currentExecutingProcess: Process,
+		context: StateContext<ProcessesStateModel>
+	): void {
+		const state = context.getState();
+		const coolDown = state.timeSlice / state.cpuClock;
+
+		const dataWithoutExecutingProcess = state.data.filter(
+			({ id }) => id !== currentExecutingProcess.id
+		);
+
+		currentExecutingProcess.executingTime += 1;
+		currentExecutingProcess.cpuTime += 1;
+
+		if (currentExecutingProcess.executingTime === coolDown) {
+			if (
+				currentExecutingProcess.cpuTime >=
+				currentExecutingProcess.processTimeToFinish
+			) {
+				context.patchState({
+					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+				});
+
+				context.dispatch([
+					new Processes.UpdateProcessState(
+						currentExecutingProcess,
+						ProcessStates.finished
+					),
+					new Logs.CreateLog({
+						process: {
+							...currentExecutingProcess,
+							state: ProcessStates.finished,
+						},
+						timer: state.timer + 1,
+					}),
+				]);
+
+				return;
+			} else {
+				currentExecutingProcess.executingTime = 0;
+
+				context.patchState({
+					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+				});
+			}
+
+			context.dispatch([
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.ready
+				),
+				new Logs.CreateLog({
+					process: { ...currentExecutingProcess, state: ProcessStates.ready },
+					timer: state.timer + coolDown - 1,
+				}),
+			]);
+
+			return;
+		}
+
+		context.dispatch(
+			new Logs.CreateLog({
+				process: {
+					...currentExecutingProcess,
+					state: ProcessStates.execution,
+				},
+				timer: state.timer,
+			})
+		);
+
+		const executingProcessType = this.getProcessType(
+			currentExecutingProcess.type
+		);
+
+		if (executingProcessType === ProcessTypes.cpuBound) {
+			if (
+				currentExecutingProcess.cpuTime >=
+				currentExecutingProcess.processTimeToFinish
+			) {
+				currentExecutingProcess.executingTime = 0;
+
+				context.patchState({
+					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+				});
+				context.dispatch([
+					new Processes.UpdateProcessState(
+						currentExecutingProcess,
+						ProcessStates.finished
+					),
+					new Logs.CreateLog({
+						process: {
+							...currentExecutingProcess,
+							state: ProcessStates.finished,
+						},
+						timer: state.timer + 1,
+					}),
+				]);
+
+				return;
+			}
+		} else {
+			currentExecutingProcess.cpuTime += 1;
+
+			if (
+				currentExecutingProcess.cpuTime >=
+				currentExecutingProcess.processTimeToFinish
+			) {
+				currentExecutingProcess.executingTime = 0;
+
+				context.patchState({
+					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+				});
+
+				context.dispatch([
+					new Processes.UpdateProcessState(
+						currentExecutingProcess,
+						ProcessStates.finished
+					),
+					new Logs.CreateLog({
+						process: {
+							...currentExecutingProcess,
+							state: ProcessStates.finished,
+						},
+						timer: state.timer + coolDown,
+					}),
+				]);
+
+				return;
+			} else {
+				context.patchState({
+					data: [currentExecutingProcess, ...dataWithoutExecutingProcess],
+				});
+			}
+
+			context.dispatch([
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.readyIo
+				),
+				new Logs.CreateLog({
+					process: {
+						...currentExecutingProcess,
+						state: ProcessStates.readyIo,
+					},
+					timer: state.timer + coolDown,
+				}),
+			]);
+		}
+	}
+
+	private runFirstCircularProcess(
+		context: StateContext<ProcessesStateModel>
+	): void {
+		const state = context.getState();
+
+		const firstProcess = state.data.find(
+			({ state }) => state === ProcessStates.ready
+		);
+
+		if (!firstProcess) return;
+
+		context.dispatch(
+			new Processes.UpdateProcessState(firstProcess, ProcessStates.execution)
+		);
 	}
 
 	private runCPUByCircularType(
@@ -371,127 +543,14 @@ export class ProcessesState {
 	): void {
 		const state = context.getState();
 
-		let coolDown = (state.timeSlice / state.cpuClock) * 1000;
-
 		const currentExecutingProcess = state.data.find(
 			(item) => item.state === ProcessStates.execution
 		);
 
 		if (currentExecutingProcess) {
-			const dataWithoutExecutingProcess = state.data.filter(
-				(item) => item.id !== currentExecutingProcess.id
-			);
-
-			context.dispatch(
-				new Logs.CreateLog({
-					process: {
-						...currentExecutingProcess,
-						state: ProcessStates.execution,
-					},
-					timer: state.timer,
-				})
-			);
-
-			const executingProcessType = this.getProcessType(
-				currentExecutingProcess.type
-			);
-
-			if (executingProcessType === ProcessTypes.cpuBound) {
-				const incrementValue = Math.min(
-					currentExecutingProcess.processTimeToFinish -
-						currentExecutingProcess.cpuTime,
-					state.timeSlice
-				);
-
-				currentExecutingProcess.cpuTime += incrementValue;
-
-				if (
-					currentExecutingProcess.cpuTime >=
-					currentExecutingProcess.processTimeToFinish
-				) {
-					context.patchState({
-						data: [...dataWithoutExecutingProcess, currentExecutingProcess],
-					});
-
-					context.dispatch([
-						new Processes.UpdateProcessState(
-							currentExecutingProcess,
-							ProcessStates.finished
-						),
-						new Logs.CreateLog({
-							process: {
-								...currentExecutingProcess,
-								state: ProcessStates.finished,
-							},
-							timer: state.timer + incrementValue,
-						}),
-					]);
-
-					coolDown = incrementValue * 1000;
-
-					return;
-				}
-
-				context.dispatch([
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.ready
-					),
-					new Logs.CreateLog({
-						process: { ...currentExecutingProcess, state: ProcessStates.ready },
-						timer: state.timer + incrementValue,
-					}),
-				]);
-			} else {
-				currentExecutingProcess.cpuTime += 1;
-
-				const data: Process[] = [
-					currentExecutingProcess,
-					...dataWithoutExecutingProcess,
-				];
-
-				context.patchState({
-					data: [...data],
-				});
-
-				context.dispatch([
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.readyIo
-					),
-					new Logs.CreateLog({
-						process: {
-							...currentExecutingProcess,
-							state: ProcessStates.readyIo,
-						},
-						timer: state.timer + 1,
-					}),
-				]);
-			}
-
-			coolDown =
-				Math.min(
-					currentExecutingProcess.processTimeToFinish - state.timer,
-					state.timeSlice
-				) * 1000;
+			this.runCircularProcess(currentExecutingProcess, context);
 		} else {
-			const firstProcess = state.data.find(
-				({ state }) => state === ProcessStates.ready
-			);
-
-			if (!firstProcess) return;
-
-			const dataWithoutFirstProcess = state.data.filter(
-				(item) => item.id !== firstProcess.id
-			);
-
-			context.patchState({
-				data: [...dataWithoutFirstProcess, firstProcess],
-			});
-
-			context.dispatch(
-				new Processes.UpdateProcessState(firstProcess, ProcessStates.execution)
-			);
+			this.runFirstCircularProcess(context);
 		}
 	}
 
@@ -500,7 +559,7 @@ export class ProcessesState {
 	): void {
 		const state = context.getState();
 
-		let coolDown = (state.timeSlice / state.cpuClock) * 1000;
+		let coolDown = state.timeSlice / state.cpuClock;
 
 		const currentExecutingProcess = state.data.find(
 			(item) => item.state === ProcessStates.execution
@@ -539,7 +598,7 @@ export class ProcessesState {
 						),
 						new Logs.CreateLog({
 							process: currentExecutingProcess,
-							timer: state.timer,
+							timer: state.timer + 1,
 						}),
 					]);
 
@@ -599,11 +658,10 @@ export class ProcessesState {
 				);
 			}
 
-			coolDown =
-				Math.min(
-					currentExecutingProcess.processTimeToFinish - state.timer,
-					state.timeSlice
-				) * 1000;
+			coolDown = Math.min(
+				currentExecutingProcess.processTimeToFinish - state.timer,
+				state.timeSlice
+			);
 		} else {
 			const highestPriority = state.data
 				.filter((item) => item.state === ProcessStates.ready)
@@ -632,7 +690,7 @@ export class ProcessesState {
 			const isIo =
 				processesWithHighestPriority[0].type !== ProcessTypes.cpuBound;
 
-			coolDown = isIo ? 1 : (state.timeSlice / state.cpuClock) * 1000;
+			coolDown = isIo ? 1 : state.timeSlice / state.cpuClock;
 		}
 	}
 
@@ -655,8 +713,6 @@ export class ProcessesState {
 
 	private runCPU(context: StateContext<ProcessesStateModel>) {
 		const state = context.getState();
-
-		const coolDown = (state.timeSlice / state.cpuClock) * 1000;
 
 		if (!state.data.length) return;
 
