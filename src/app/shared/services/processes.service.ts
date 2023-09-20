@@ -6,6 +6,7 @@ import { ProcessStates } from '../constants/process-states.constants';
 import { ScalingTypesEnum } from '../constants/scaling-types.constants';
 import { GenericSelectData } from '../models/generic-select-data';
 import { CreateProcessDTO, Process } from '../models/process';
+import { ScalingTypeDescriptionPipe } from '../pipes/scaling-type-description.pipe';
 
 @Injectable({
 	providedIn: 'root',
@@ -62,16 +63,36 @@ export class ProcessesService {
 		);
 	}
 
+	// static getAllCategoriesList(): Array<CategorySelectData> {
+	// 	const orderCategories = Object.values(OrderCategoryEnum).filter(
+	// 		value => typeof value === 'number'
+	// 	) as Array<OrderCategoryEnum>;
+
+	// 	return orderCategories.map(orderCategory => ({
+	// 		id: orderCategory,
+	// 		description: new CategoryDescriptionPipe().transform(orderCategory),
+	// 	}));
+	// }
+
 	public getScalingTypesSelectData(): GenericSelectData<ScalingTypesEnum>[] {
-		return [
-			{
-				id: ScalingTypesEnum.Circular,
-				description: 'Circular',
-			},
-			{
-				id: ScalingTypesEnum.CircularWithPriorities,
-				description: 'Circular com Prioridades',
-			},
-		];
+		const scalingTypes = Object.values(ScalingTypesEnum).filter(
+			(value) => typeof value === 'number'
+		) as Array<ScalingTypesEnum>;
+
+		return scalingTypes.map((scalingType) => ({
+			id: scalingType,
+			description: new ScalingTypeDescriptionPipe().transform(scalingType),
+		}));
+
+		// return [
+		// 	{
+		// 		id: ScalingTypesEnum.Circular,
+		// 		description: 'Circular',
+		// 	},
+		// 	{
+		// 		id: ScalingTypesEnum.CircularWithPriorities,
+		// 		description: 'Circular com Prioridades',
+		// 	},
+		// ];
 	}
 }
