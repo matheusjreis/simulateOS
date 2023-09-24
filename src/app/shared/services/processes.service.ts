@@ -3,6 +3,10 @@ import { Observable, concatMap, delay, from, of, toArray } from 'rxjs';
 
 import { ProcessColors } from '../constants/process-colors.constants';
 import { ProcessStates } from '../constants/process-states.constants';
+import {
+	ProcessTypes,
+	ProcessTypesType,
+} from '../constants/process-types.constants';
 import { ScalingTypesEnum } from '../constants/scaling-types.constants';
 import { GenericSelectData } from '../models/generic-select-data';
 import { CreateProcessDTO, Process } from '../models/process';
@@ -57,22 +61,12 @@ export class ProcessesService {
 					timeCreated: time,
 					processTimeToFinish: process.processTimeToFinish,
 					executingTime: 0,
+					currentType: this.getProcessType(process.type),
 				}).pipe(delay(50))
 			),
 			toArray()
 		);
 	}
-
-	// static getAllCategoriesList(): Array<CategorySelectData> {
-	// 	const orderCategories = Object.values(OrderCategoryEnum).filter(
-	// 		value => typeof value === 'number'
-	// 	) as Array<OrderCategoryEnum>;
-
-	// 	return orderCategories.map(orderCategory => ({
-	// 		id: orderCategory,
-	// 		description: new CategoryDescriptionPipe().transform(orderCategory),
-	// 	}));
-	// }
 
 	public getScalingTypesSelectData(): GenericSelectData<ScalingTypesEnum>[] {
 		const scalingTypes = Object.values(ScalingTypesEnum).filter(
@@ -83,16 +77,17 @@ export class ProcessesService {
 			id: scalingType,
 			description: new ScalingTypeDescriptionPipe().transform(scalingType),
 		}));
+	}
 
-		// return [
-		// 	{
-		// 		id: ScalingTypesEnum.Circular,
-		// 		description: 'Circular',
-		// 	},
-		// 	{
-		// 		id: ScalingTypesEnum.CircularWithPriorities,
-		// 		description: 'Circular com Prioridades',
-		// 	},
-		// ];
+	public getProcessType(type: ProcessTypesType): ProcessTypesType {
+		let value = type;
+
+		if (type === ProcessTypes.cpuAndIoBound) {
+			const types = [ProcessTypes.cpuBound, ProcessTypes.ioBound];
+
+			value = types[Math.floor(Math.random() * types.length)];
+		}
+
+		return value;
 	}
 }
