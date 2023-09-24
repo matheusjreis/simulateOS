@@ -11,6 +11,7 @@ import {
 	ProcessStatesType,
 } from 'src/app/shared/constants/process-states.constants';
 import {
+	ProcessTypes,
 	ProcessTypesNames,
 	ProcessTypesType,
 } from 'src/app/shared/constants/process-types.constants';
@@ -70,14 +71,20 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 		);
 
 		this.subscriptions.add(
-			this.executingProcess$.subscribe((process: Process) => {
-				this.executingProcess = process;
-			})
-		);
+			this.executingProcess$.subscribe((process) => {
+				if (!process) {
+					this.executingProcess = undefined;
+					this.ioProcess = undefined;
+					return;
+				}
 
-		this.subscriptions.add(
-			this.ioProcess$.subscribe((process: Process) => {
-				this.ioProcess = process;
+				if (process.currentType === ProcessTypes.cpuBound) {
+					this.ioProcess = undefined;
+					this.executingProcess = { ...process };
+				} else {
+					this.executingProcess = undefined;
+					this.ioProcess = { ...process };
+				}
 			})
 		);
 	}
