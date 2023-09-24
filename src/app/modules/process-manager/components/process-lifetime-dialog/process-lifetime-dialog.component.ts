@@ -136,7 +136,7 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 					},
 				],
 				chart: {
-					height: logsByPID.length * 50,
+					height: logsByPID.length * 50 + 100,
 					type: 'rangeBar',
 				},
 				plotOptions: {
