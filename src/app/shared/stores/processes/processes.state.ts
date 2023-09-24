@@ -3,10 +3,7 @@ import { Action, Selector, State, StateContext } from '@ngxs/store';
 import { tap } from 'rxjs';
 import { Color, ProcessColors } from '../../constants/process-colors.constants';
 import { ProcessStates } from '../../constants/process-states.constants';
-import {
-	ProcessTypes,
-	ProcessTypesType,
-} from '../../constants/process-types.constants';
+import { ProcessTypes } from '../../constants/process-types.constants';
 import { ScalingTypesEnum } from '../../constants/scaling-types.constants';
 import { Process } from '../../models/process';
 import { ProcessesService } from '../../services/processes.service';
@@ -360,33 +357,37 @@ export class ProcessesState {
 		this.runIO(context);
 	}
 
-	private getProcessType(type: ProcessTypesType): ProcessTypesType {
-		let value = type;
-
-		if (type === ProcessTypes.cpuAndIoBound) {
-			const types = [ProcessTypes.cpuBound, ProcessTypes.ioBound];
-
-			type = types[Math.floor(Math.random() * types.length)];
-		}
-
-		return value;
-	}
-
 	private runCircularProcess(
 		currentExecutingProcess: Process,
 		context: StateContext<ProcessesStateModel>
 	): void {
-		const state = context.getState();
-		const coolDown = state.timeSlice / state.cpuClock;
+		const {
+			data: processes,
+			cpuClock,
+			ioWaitTime,
+			timeSlice,
+		} = context.getState();
 
-		const dataWithoutExecutingProcess = state.data.filter(
+		const executingTime =
+			currentExecutingProcess.currentType === ProcessTypes.cpuBound
+				? cpuClock
+				: 1;
+
+		const coolDown =
+			currentExecutingProcess.currentType === ProcessTypes.cpuBound
+				? timeSlice / cpuClock
+				: ioWaitTime / cpuClock;
+
+		currentExecutingProcess.executingTime += executingTime;
+		currentExecutingProcess.cpuTime += executingTime;
+
+		const dataWithoutExecutingProcess = processes.filter(
 			({ id }) => id !== currentExecutingProcess.id
 		);
 
-		currentExecutingProcess.executingTime += 1;
-		currentExecutingProcess.cpuTime += 1;
+		if (currentExecutingProcess.executingTime >= coolDown) {
+			currentExecutingProcess.executingTime = 0;
 
-		if (currentExecutingProcess.executingTime === coolDown) {
 			if (
 				currentExecutingProcess.cpuTime >=
 				currentExecutingProcess.processTimeToFinish
@@ -395,130 +396,46 @@ export class ProcessesState {
 					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
 				});
 
-				context.dispatch([
+				context.dispatch(
 					new Processes.UpdateProcessState(
 						currentExecutingProcess,
 						ProcessStates.finished
-					),
-					new Logs.CreateLog({
-						process: {
-							...currentExecutingProcess,
-							state: ProcessStates.finished,
-						},
-						timer: state.timer + 1,
-					}),
-				]);
+					)
+				);
 
 				return;
-			} else {
-				currentExecutingProcess.executingTime = 0;
-
-				context.patchState({
-					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
-				});
 			}
 
-			context.dispatch([
+			context.patchState({
+				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+			});
+
+			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
 					ProcessStates.ready
-				),
-				new Logs.CreateLog({
-					process: { ...currentExecutingProcess, state: ProcessStates.ready },
-					timer: state.timer + coolDown - 1,
-				}),
-			]);
+				)
+			);
 
 			return;
 		}
 
-		context.dispatch(
-			new Logs.CreateLog({
-				process: {
-					...currentExecutingProcess,
-					state: ProcessStates.execution,
-				},
-				timer: state.timer,
-			})
-		);
+		if (
+			currentExecutingProcess.cpuTime >=
+			currentExecutingProcess.processTimeToFinish
+		) {
+			context.patchState({
+				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+			});
 
-		const executingProcessType = this.getProcessType(
-			currentExecutingProcess.type
-		);
-
-		if (executingProcessType === ProcessTypes.cpuBound) {
-			if (
-				currentExecutingProcess.cpuTime >=
-				currentExecutingProcess.processTimeToFinish
-			) {
-				currentExecutingProcess.executingTime = 0;
-
-				context.patchState({
-					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
-				});
-				context.dispatch([
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.finished
-					),
-					new Logs.CreateLog({
-						process: {
-							...currentExecutingProcess,
-							state: ProcessStates.finished,
-						},
-						timer: state.timer + 1,
-					}),
-				]);
-
-				return;
-			}
-		} else {
-			currentExecutingProcess.cpuTime += 1;
-
-			if (
-				currentExecutingProcess.cpuTime >=
-				currentExecutingProcess.processTimeToFinish
-			) {
-				currentExecutingProcess.executingTime = 0;
-
-				context.patchState({
-					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
-				});
-
-				context.dispatch([
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.finished
-					),
-					new Logs.CreateLog({
-						process: {
-							...currentExecutingProcess,
-							state: ProcessStates.finished,
-						},
-						timer: state.timer + coolDown,
-					}),
-				]);
-
-				return;
-			} else {
-				context.patchState({
-					data: [currentExecutingProcess, ...dataWithoutExecutingProcess],
-				});
-			}
-
-			context.dispatch([
+			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
-					ProcessStates.readyIo
-				),
-				new Logs.CreateLog({
-					process: {
-						...currentExecutingProcess,
-						state: ProcessStates.readyIo,
-					},
-					timer: state.timer + coolDown,
-				}),
-			]);
+					ProcessStates.finished
+				)
+			);
+
+			return;
 		}
 	}
 
@@ -570,7 +487,7 @@ export class ProcessesState {
 				(item) => item.id !== currentExecutingProcess.id
 			);
 
-			const executingProcessType = this.getProcessType(
+			const executingProcessType = this.processesService.getProcessType(
 				currentExecutingProcess.type
 			);
 
