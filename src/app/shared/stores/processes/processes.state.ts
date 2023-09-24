@@ -370,7 +370,11 @@ export class ProcessesState {
 
 		const executingTime =
 			currentExecutingProcess.currentType === ProcessTypes.cpuBound
-				? cpuClock
+				? Math.min(
+						currentExecutingProcess.processTimeToFinish -
+							currentExecutingProcess.cpuTime,
+						cpuClock
+				  )
 				: 1;
 
 		const coolDown =
