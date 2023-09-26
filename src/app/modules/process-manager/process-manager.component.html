@@ -168,12 +168,21 @@
 					</td>
 				</ng-container>
 
-				<tr mat-header-row *matHeaderRowDef="displayedColumnsIO"></tr>
+				<ng-container matColumnDef="processTimeToFinish">
+					<th style="text-align: center" mat-header-cell *matHeaderCellDef>
+						Tempo do processo
+					</th>
+					<td style="text-align: center" mat-cell *matCellDef="let process">
+						{{ process.processTimeToFinish }}
+					</td>
+				</ng-container>
+
+				<tr mat-header-row *matHeaderRowDef="displayedColumns$ | async"></tr>
 				<tr
 					class="process-row"
 					(click)="editProcess(row)"
 					mat-row
-					*matRowDef="let row; columns: displayedColumnsIO"
+					*matRowDef="let row; columns: displayedColumns$ | async"
 				></tr>
 			</table>
 		</div>

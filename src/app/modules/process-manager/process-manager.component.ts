@@ -50,7 +50,6 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	finishedProcesses$!: Observable<Array<string>>;
 
 	@ViewChild(MatMenuTrigger) actionsMenu!: MatMenuTrigger;
-	displayedColumnsIO: string[] = ['id'];
 
 	readonly processState = ProcessesState;
 	readonly scalingTypeEnum = ScalingTypesEnum;
