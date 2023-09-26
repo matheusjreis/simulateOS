@@ -62,7 +62,11 @@ export class ProcessesState {
 
 	@Selector()
 	static getReadyProcesses(state: ProcessesStateModel) {
-		return state.data.filter((item) => item.state === ProcessStates.ready);
+		return state.data.filter(
+			(item) =>
+				item.state === ProcessStates.ready &&
+				item.type === ProcessTypes.cpuBound
+		);
 	}
 
 	@Selector()
@@ -89,7 +93,10 @@ export class ProcessesState {
 
 	@Selector()
 	static getIOQueueProcesses(state: ProcessesStateModel) {
-		return state.data.filter((item) => item.state === ProcessStates.readyIo);
+		return state.data.filter(
+			(item) =>
+				item.state === ProcessStates.ready && item.type === ProcessTypes.ioBound
+		);
 	}
 
 	@Selector()
@@ -172,7 +179,7 @@ export class ProcessesState {
 		context.dispatch(new Processes.StopProcesses());
 
 		this.runCPU(context);
-		this.runIO(context);
+		// this.runIO(context);
 	}
 
 	@Action(Processes.CreateProcess)
@@ -279,15 +286,21 @@ export class ProcessesState {
 		context: StateContext<ProcessesStateModel>,
 		action: Processes.UpdateProcessState
 	) {
-		const state = context.getState();
-		const data = state.data;
+		const { data, timer } = context.getState();
 		const index = data.findIndex((item) => item.id === action.process.id);
 
 		const updatedProcess: Process = { ...action.process, state: action.state };
 
 		data[index] = updatedProcess;
 
-		// TODO: verificar se a criação do log pode ser aqui, pelo menos pra x estados de processo
+		if (updatedProcess.currentType !== ProcessTypes.ioBound) {
+			context.dispatch(
+				new Logs.CreateLog({
+					process: updatedProcess,
+					timer,
+				})
+			);
+		}
 
 		context.patchState({
 			data: [...data],
@@ -341,19 +354,20 @@ export class ProcessesState {
 		});
 
 		this.runCPU(context);
-		this.runIO(context);
+		// this.runIO(context);
 	}
 
 	@Action(Processes.StartIOTimer)
 	incrementIOTimer(context: StateContext<ProcessesStateModel>) {
 		const state = context.getState();
+		// TODO: analisar isto
 
 		if (state.colors?.length)
 			ProcessColors.forEach((item, index) => {
 				item.isAvailable = state.colors[index].isAvailable;
 			});
 
-		this.runCPU(context);
+		// this.runCPU(context);
 		this.runIO(context);
 	}
 
@@ -367,6 +381,8 @@ export class ProcessesState {
 			ioWaitTime,
 			timeSlice,
 		} = context.getState();
+
+		// TODO: remover validacoes de IO
 
 		const executingTime =
 			currentExecutingProcess.currentType === ProcessTypes.cpuBound
@@ -449,7 +465,8 @@ export class ProcessesState {
 		const state = context.getState();
 
 		const firstProcess = state.data.find(
-			({ state }) => state === ProcessStates.ready
+			({ state, currentType }) =>
+				state === ProcessStates.ready && currentType === ProcessTypes.cpuBound
 		);
 
 		if (!firstProcess) return;
@@ -465,7 +482,9 @@ export class ProcessesState {
 		const state = context.getState();
 
 		const currentExecutingProcess = state.data.find(
-			(item) => item.state === ProcessStates.execution
+			(item) =>
+				item.state === ProcessStates.execution &&
+				item.currentType === ProcessTypes.cpuBound
 		);
 
 		if (currentExecutingProcess) {
@@ -654,6 +673,8 @@ export class ProcessesState {
 		const state = context.getState();
 
 		if (!state.data.length) return;
+
+		// TODO: estudar para remover este readyIo. Não vi necessidade, sendo que já temos o type
 
 		const readyIOProcesses = state.data.filter(
 			(item) => item.state === ProcessStates.readyIo
