@@ -14,66 +14,96 @@
 
 		<div>
 			<div class="processes-stats__title">Escalonamento</div>
-			<div class="processes-stats__content">
-				{{ scalingType$ | async | scalingTypeDescription }}
+			<div style="display: flex; align-items: center">
+				<div class="processes-stats__content">
+					{{ scalingType$ | async | scalingTypeDescription }}
+				</div>
+
+				<button
+					mat-icon-button
+					type="button"
+					(click)="handleOpenSelectScalingType()"
+				>
+					<mat-icon>edit</mat-icon>
+				</button>
 			</div>
 		</div>
-
-		<button
-			mat-raised-button
-			color="primary"
-			(click)="handleOpenSelectScalingType()"
-		>
-			Escolher Escalonamento
-		</button>
 	</div>
 
-	<div class="cpu-settings">
-		<div>
-			<div>Tempo de espera de I/O</div>
-			<mat-slider
-				(input)="changeIOWaitTime($event)"
-				[min]="1"
-				[max]="10"
-				[step]="1"
-				[tickInterval]="1"
-				[(ngModel)]="ioWaitTime"
-				color="primary"
-				thumbLabel
-			>
-			</mat-slider>
-		</div>
+	<form class="cpu-settings" [formGroup]="formGroup">
+		<mat-form-field appearance="outline" style="text-align: center">
+			<mat-label>Tempo de espera de I/O</mat-label>
 
-		<div>
-			<div>Fatia de tempo</div>
-			<mat-slider
-				(input)="changeTimeSlice($event)"
-				[min]="2"
-				[max]="10"
-				[step]="1"
-				[tickInterval]="1"
-				[(ngModel)]="timeSlice"
-				color="primary"
-				thumbLabel
+			<button
+				matPrefix
+				mat-icon-button
+				type="button"
+				(click)="handleQuantity('decrement', 'ioWaitTime')"
 			>
-			</mat-slider>
-		</div>
+				<mat-icon class="remove-icon">do_not_disturb_on</mat-icon>
+			</button>
 
-		<div>
-			<div>Clock da CPU</div>
-			<mat-slider
-				(input)="changeCpuClock($event)"
-				[min]="1"
-				[max]="10"
-				[step]="1"
-				[tickInterval]="1"
-				[(ngModel)]="cpuClock"
-				color="primary"
-				thumbLabel
+			<input matInput readonly formControlName="ioWaitTime" />
+
+			<button
+				matSuffix
+				mat-icon-button
+				type="button"
+				(click)="handleQuantity('increment', 'ioWaitTime')"
 			>
-			</mat-slider>
-		</div>
-	</div>
+				<mat-icon class="add-icon">add_circle</mat-icon>
+			</button>
+		</mat-form-field>
+
+		<mat-form-field appearance="outline" style="text-align: center">
+			<mat-label>Fatia de tempo</mat-label>
+
+			<button
+				matPrefix
+				mat-icon-button
+				type="button"
+				(click)="handleQuantity('decrement', 'timeSlice')"
+			>
+				<mat-icon class="remove-icon">do_not_disturb_on</mat-icon>
+			</button>
+
+			<input matInput readonly formControlName="timeSlice" />
+
+			<button
+				matSuffix
+				mat-icon-button
+				type="button"
+				(click)="handleQuantity('increment', 'timeSlice')"
+			>
+				<mat-icon class="add-icon">add_circle</mat-icon>
+			</button>
+		</mat-form-field>
+
+		<mat-form-field appearance="outline" style="text-align: center">
+			<mat-label>Clock da CPU</mat-label>
+
+			<button
+				matPrefix
+				mat-icon-button
+				type="button"
+				(click)="handleQuantity('decrement', 'cpuClock')"
+			>
+				<mat-icon class="remove-icon">do_not_disturb_on</mat-icon>
+			</button>
+
+			<input matInput readonly formControlName="cpuClock" />
+
+			<button
+				matSuffix
+				mat-icon-button
+				type="button"
+				(click)="handleQuantity('increment', 'cpuClock')"
+			>
+				<mat-icon class="add-icon">add_circle</mat-icon>
+			</button>
+		</mat-form-field>
+	</form>
+
 	<button mat-raised-button color="primary" (click)="stopProcesses()">
 		Parar
 	</button>

@@ -10,7 +10,8 @@
 
 	&__data {
 		display: flex;
-		gap: 32px;
+		align-items: center;
+		gap: 16px;
 	}
 
 	&__title {
@@ -27,5 +28,23 @@
 	.cpu-settings {
 		display: flex;
 		gap: 16px;
+	}
+
+	.remove-icon {
+		color: red;
+	}
+
+	.add-icon {
+		color: green;
+	}
+
+	.mat-form-field {
+		width: 205px;
+	}
+
+	::ng-deep {
+		.mat-form-field-wrapper {
+			padding-bottom: 0;
+		}
 	}
 }
