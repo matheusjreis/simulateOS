@@ -61,7 +61,7 @@ export class CreateProcessDialogComponent implements OnInit {
 				1,
 				[Validators.min(1), Validators.max(this.maxAvailableProcesses)],
 			],
-			processTimeToFinish: [null, [Validators.required, Validators.min(1)]],
+			processTimeToFinish: [1, [Validators.required, Validators.min(1)]],
 		});
 	}
 
