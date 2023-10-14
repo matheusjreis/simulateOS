@@ -175,7 +175,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 
 	handleOpenProcessLifetimeDialog(): void {
 		this.dialog.open(ProcessLifetimeDialogComponent, {
-			width: '800px',
+			width: '80%',
 		});
 	}
 }
