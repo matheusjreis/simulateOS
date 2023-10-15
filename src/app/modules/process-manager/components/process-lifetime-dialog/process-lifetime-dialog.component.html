@@ -4,12 +4,20 @@
 			Tempo de Vida dos Processos
 		</h1>
 
-		<button mat-icon-button mat-dialog-close class="close-button">
-			<mat-icon>close</mat-icon>
-		</button>
+		<div class="title-buttons-container">
+			<button mat-icon-button (click)="handleFullscreenDialog()">
+				<mat-icon>{{
+					isFullscreen ? "close_fullscreen" : "open_in_full"
+				}}</mat-icon>
+			</button>
+
+			<button mat-icon-button mat-dialog-close>
+				<mat-icon>close</mat-icon>
+			</button>
+		</div>
 	</header>
 
-	<section mat-dialog-content>
+	<section mat-dialog-content [ngClass]="{ 'mh-none': isFullscreen }">
 		<div class="row">
 			<div class="col" style="text-align: center">
 				<span
@@ -108,7 +116,12 @@
 				class="col"
 				style="display: flex; justify-content: flex-end; margin-top: 1em"
 			>
-				<button mat-raised-button color="primary" (click)="generateChart()">
+				<button
+					[disabled]="!checkedProcessesLength"
+					mat-raised-button
+					color="primary"
+					(click)="generateChart()"
+				>
 					Gerar gráfico
 				</button>
 			</div>

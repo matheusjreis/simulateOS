@@ -51,6 +51,7 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 	displayedColumns: Array<string> = [];
 	logs: Array<Log> = [];
 	chartOptions: ChartOptions | null = null;
+	isFullscreen = false;
 
 	constructor(
 		@Inject(DOCUMENT) private readonly document: Document,
@@ -59,6 +60,10 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 
 	get isAllProcessesChecked(): boolean {
 		return this.finishedProcesses.every(({ checked }) => checked);
+	}
+
+	get checkedProcessesLength(): number {
+		return this.finishedProcesses.filter(({ checked }) => checked).length;
 	}
 
 	private getFinishedProcesses(): void {
@@ -216,6 +221,22 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 		}));
 
 		this.finishedProcesses = [...aux];
+	}
+
+	handleFullscreenDialog(): void {
+		this.isFullscreen = !this.isFullscreen;
+
+		const dialogBackdrop = this.document.querySelector('.cdk-overlay-pane');
+
+		if (!dialogBackdrop) return;
+
+		if (this.isFullscreen) {
+			dialogBackdrop?.classList.add('mx-none');
+			this.dialogRef.updateSize('100%', '100%');
+		} else {
+			dialogBackdrop?.classList.remove('mx-none');
+			this.dialogRef.updateSize('80%');
+		}
 	}
 
 	onClose() {
