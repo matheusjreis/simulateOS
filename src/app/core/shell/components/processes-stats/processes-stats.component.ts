@@ -159,9 +159,6 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 		);
 
 		this.initFormsObservable();
-
-		// TODO: analisar isto
-		this.store.dispatch(new Processes.StartIOTimer());
 	}
 
 	ngOnDestroy() {

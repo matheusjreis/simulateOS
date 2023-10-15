@@ -50,22 +50,27 @@ export class ProcessesState {
 
 	@Selector()
 	static getExecutingProcess(state: ProcessesStateModel) {
-		return state.data.filter(
-			(item) => item.state === ProcessStates.execution
-		)[0];
+		return state.data.find(
+			({ currentType, state }) =>
+				currentType === ProcessTypes.cpuBound &&
+				state === ProcessStates.execution
+		);
 	}
 
 	@Selector()
 	static getIOProcess(state: ProcessesStateModel) {
-		return state.data.filter((item) => item.state === ProcessStates.io)[0];
+		return state.data.find(
+			({ currentType, state }) =>
+				currentType === ProcessTypes.ioBound &&
+				state === ProcessStates.execution
+		);
 	}
 
 	@Selector()
 	static getReadyProcesses(state: ProcessesStateModel) {
 		return state.data.filter(
-			(item) =>
-				item.state === ProcessStates.ready &&
-				item.type === ProcessTypes.cpuBound
+			({ state, currentType }) =>
+				state === ProcessStates.ready && currentType === ProcessTypes.cpuBound
 		);
 	}
 
@@ -94,8 +99,8 @@ export class ProcessesState {
 	@Selector()
 	static getIOQueueProcesses(state: ProcessesStateModel) {
 		return state.data.filter(
-			(item) =>
-				item.state === ProcessStates.ready && item.type === ProcessTypes.ioBound
+			({ state, currentType }) =>
+				state === ProcessStates.ready && currentType === ProcessTypes.ioBound
 		);
 	}
 
@@ -179,7 +184,7 @@ export class ProcessesState {
 		context.dispatch(new Processes.StopProcesses());
 
 		this.runCPU(context);
-		// this.runIO(context);
+		this.runIO(context);
 	}
 
 	@Action(Processes.CreateProcess)
@@ -354,20 +359,6 @@ export class ProcessesState {
 		});
 
 		this.runCPU(context);
-		// this.runIO(context);
-	}
-
-	@Action(Processes.StartIOTimer)
-	incrementIOTimer(context: StateContext<ProcessesStateModel>) {
-		const state = context.getState();
-		// TODO: analisar isto
-
-		if (state.colors?.length)
-			ProcessColors.forEach((item, index) => {
-				item.isAvailable = state.colors[index].isAvailable;
-			});
-
-		// this.runCPU(context);
 		this.runIO(context);
 	}
 
@@ -381,8 +372,6 @@ export class ProcessesState {
 			ioWaitTime,
 			timeSlice,
 		} = context.getState();
-
-		// TODO: remover validacoes de IO
 
 		const executingTime =
 			currentExecutingProcess.currentType === ProcessTypes.cpuBound
@@ -460,13 +449,17 @@ export class ProcessesState {
 	}
 
 	private runFirstCircularProcess(
-		context: StateContext<ProcessesStateModel>
+		context: StateContext<ProcessesStateModel>,
+		executionModel: 'cpu' | 'io'
 	): void {
 		const state = context.getState();
 
+		const type =
+			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
+
 		const firstProcess = state.data.find(
 			({ state, currentType }) =>
-				state === ProcessStates.ready && currentType === ProcessTypes.cpuBound
+				state === ProcessStates.ready && type === currentType
 		);
 
 		if (!firstProcess) return;
@@ -477,171 +470,154 @@ export class ProcessesState {
 	}
 
 	private runCPUByCircularType(
-		context: StateContext<ProcessesStateModel>
+		context: StateContext<ProcessesStateModel>,
+		executionModel: 'cpu' | 'io'
 	): void {
 		const state = context.getState();
 
+		const type =
+			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
+
 		const currentExecutingProcess = state.data.find(
-			(item) =>
-				item.state === ProcessStates.execution &&
-				item.currentType === ProcessTypes.cpuBound
+			({ state, currentType }) =>
+				state === ProcessStates.execution && type === currentType
 		);
 
 		if (currentExecutingProcess) {
 			this.runCircularProcess(currentExecutingProcess, context);
 		} else {
-			this.runFirstCircularProcess(context);
+			this.runFirstCircularProcess(context, executionModel);
 		}
 	}
 
 	private runCPUByCircularWithPrioritiesType(
 		context: StateContext<ProcessesStateModel>
 	): void {
-		const state = context.getState();
-
-		let coolDown = state.timeSlice / state.cpuClock;
-
-		const currentExecutingProcess = state.data.find(
-			(item) => item.state === ProcessStates.execution
-		);
-
-		if (currentExecutingProcess) {
-			const dataWithoutExecutingProcess = state.data.filter(
-				(item) => item.id !== currentExecutingProcess.id
-			);
-
-			const executingProcessType = this.processesService.getProcessType(
-				currentExecutingProcess.type
-			);
-
-			if (executingProcessType === ProcessTypes.cpuBound) {
-				const incrementValue = Math.min(
-					currentExecutingProcess.processTimeToFinish -
-						currentExecutingProcess.cpuTime,
-					state.timeSlice
-				);
-
-				currentExecutingProcess.cpuTime += incrementValue;
-
-				if (
-					currentExecutingProcess.cpuTime >=
-					currentExecutingProcess.processTimeToFinish
-				) {
-					context.patchState({
-						data: [...dataWithoutExecutingProcess, currentExecutingProcess],
-					});
-
-					context.dispatch([
-						new Processes.UpdateProcessState(
-							currentExecutingProcess,
-							ProcessStates.finished
-						),
-						new Logs.CreateLog({
-							process: currentExecutingProcess,
-							timer: state.timer + 1,
-						}),
-					]);
-
-					return;
-				}
-
-				const indexOfFirstProcessWithLessPriority = state.data.findIndex(
-					(item) => item.priority < currentExecutingProcess.priority
-				);
-
-				if (indexOfFirstProcessWithLessPriority === -1) {
-					const data: Process[] = [
-						...dataWithoutExecutingProcess,
-						currentExecutingProcess,
-					];
-
-					context.patchState({
-						data: [...data],
-					});
-				} else {
-					dataWithoutExecutingProcess.splice(
-						indexOfFirstProcessWithLessPriority === 0
-							? 0
-							: indexOfFirstProcessWithLessPriority - 1,
-						0,
-						currentExecutingProcess
-					);
-
-					context.patchState({
-						data: [...dataWithoutExecutingProcess],
-					});
-				}
-
-				context.dispatch(
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.ready
-					)
-				);
-			} else {
-				currentExecutingProcess.cpuTime += 1;
-
-				const data: Process[] = [
-					currentExecutingProcess,
-					...dataWithoutExecutingProcess,
-				];
-
-				context.patchState({
-					data: [...data],
-				});
-
-				context.dispatch(
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.readyIo
-					)
-				);
-			}
-
-			coolDown = Math.min(
-				currentExecutingProcess.processTimeToFinish - state.timer,
-				state.timeSlice
-			);
-		} else {
-			const highestPriority = state.data
-				.filter((item) => item.state === ProcessStates.ready)
-				.reduce((prv, cur) =>
-					prv.priority > cur.priority ? prv : cur
-				).priority;
-
-			const processesWithHighestPriority = state.data.filter(
-				(item) =>
-					item.priority === highestPriority &&
-					item.state === ProcessStates.ready
-			);
-
-			if (processesWithHighestPriority.length)
-				context.dispatch([
-					new Processes.UpdateProcessState(
-						processesWithHighestPriority[0],
-						ProcessStates.execution
-					),
-					new Logs.CreateLog({
-						process: processesWithHighestPriority[0],
-						timer: state.timer,
-					}),
-				]);
-
-			const isIo =
-				processesWithHighestPriority[0].type !== ProcessTypes.cpuBound;
-
-			coolDown = isIo ? 1 : state.timeSlice / state.cpuClock;
-		}
+		// TODO: redo this function
+		// const state = context.getState();
+		// let coolDown = state.timeSlice / state.cpuClock;
+		// const currentExecutingProcess = state.data.find(
+		// 	(item) => item.state === ProcessStates.execution
+		// );
+		// if (currentExecutingProcess) {
+		// 	const dataWithoutExecutingProcess = state.data.filter(
+		// 		(item) => item.id !== currentExecutingProcess.id
+		// 	);
+		// 	const executingProcessType = this.processesService.getProcessType(
+		// 		currentExecutingProcess.type
+		// 	);
+		// 	if (executingProcessType === ProcessTypes.cpuBound) {
+		// 		const incrementValue = Math.min(
+		// 			currentExecutingProcess.processTimeToFinish -
+		// 				currentExecutingProcess.cpuTime,
+		// 			state.timeSlice
+		// 		);
+		// 		currentExecutingProcess.cpuTime += incrementValue;
+		// 		if (
+		// 			currentExecutingProcess.cpuTime >=
+		// 			currentExecutingProcess.processTimeToFinish
+		// 		) {
+		// 			context.patchState({
+		// 				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+		// 			});
+		// 			context.dispatch([
+		// 				new Processes.UpdateProcessState(
+		// 					currentExecutingProcess,
+		// 					ProcessStates.finished
+		// 				),
+		// 				new Logs.CreateLog({
+		// 					process: currentExecutingProcess,
+		// 					timer: state.timer + 1,
+		// 				}),
+		// 			]);
+		// 			return;
+		// 		}
+		// 		const indexOfFirstProcessWithLessPriority = state.data.findIndex(
+		// 			(item) => item.priority < currentExecutingProcess.priority
+		// 		);
+		// 		if (indexOfFirstProcessWithLessPriority === -1) {
+		// 			const data: Process[] = [
+		// 				...dataWithoutExecutingProcess,
+		// 				currentExecutingProcess,
+		// 			];
+		// 			context.patchState({
+		// 				data: [...data],
+		// 			});
+		// 		} else {
+		// 			dataWithoutExecutingProcess.splice(
+		// 				indexOfFirstProcessWithLessPriority === 0
+		// 					? 0
+		// 					: indexOfFirstProcessWithLessPriority - 1,
+		// 				0,
+		// 				currentExecutingProcess
+		// 			);
+		// 			context.patchState({
+		// 				data: [...dataWithoutExecutingProcess],
+		// 			});
+		// 		}
+		// 		context.dispatch(
+		// 			new Processes.UpdateProcessState(
+		// 				currentExecutingProcess,
+		// 				ProcessStates.ready
+		// 			)
+		// 		);
+		// 	} else {
+		// 		currentExecutingProcess.cpuTime += 1;
+		// 		const data: Process[] = [
+		// 			currentExecutingProcess,
+		// 			...dataWithoutExecutingProcess,
+		// 		];
+		// 		context.patchState({
+		// 			data: [...data],
+		// 		});
+		// 		context.dispatch(
+		// 			new Processes.UpdateProcessState(
+		// 				currentExecutingProcess,
+		// 				ProcessStates.readyIo
+		// 			)
+		// 		);
+		// 	}
+		// 	coolDown = Math.min(
+		// 		currentExecutingProcess.processTimeToFinish - state.timer,
+		// 		state.timeSlice
+		// 	);
+		// } else {
+		// 	const highestPriority = state.data
+		// 		.filter((item) => item.state === ProcessStates.ready)
+		// 		.reduce((prv, cur) =>
+		// 			prv.priority > cur.priority ? prv : cur
+		// 		).priority;
+		// 	const processesWithHighestPriority = state.data.filter(
+		// 		(item) =>
+		// 			item.priority === highestPriority &&
+		// 			item.state === ProcessStates.ready
+		// 	);
+		// 	if (processesWithHighestPriority.length)
+		// 		context.dispatch([
+		// 			new Processes.UpdateProcessState(
+		// 				processesWithHighestPriority[0],
+		// 				ProcessStates.execution
+		// 			),
+		// 			new Logs.CreateLog({
+		// 				process: processesWithHighestPriority[0],
+		// 				timer: state.timer,
+		// 			}),
+		// 		]);
+		// 	const isIo =
+		// 		processesWithHighestPriority[0].type !== ProcessTypes.cpuBound;
+		// 	coolDown = isIo ? 1 : state.timeSlice / state.cpuClock;
+		// }
 	}
 
 	private runCPUByScalingType(
-		context: StateContext<ProcessesStateModel>
+		context: StateContext<ProcessesStateModel>,
+		executionModel: 'cpu' | 'io'
 	): void {
 		const { scalingType } = context.getState();
 
 		switch (scalingType) {
 			case ScalingTypesEnum.Circular:
-				this.runCPUByCircularType(context);
+				this.runCPUByCircularType(context, executionModel);
 				break;
 			case ScalingTypesEnum.CircularWithPriorities:
 				this.runCPUByCircularWithPrioritiesType(context);
@@ -656,17 +632,15 @@ export class ProcessesState {
 
 		if (!state.data.length) return;
 
-		const readyProcesses = state.data.filter(
-			(item) => item.state === ProcessStates.ready
+		const runnableProcesses = state.data.filter(
+			({ currentType, state }) =>
+				currentType === ProcessTypes.cpuBound &&
+				[ProcessStates.ready, ProcessStates.execution].includes(state)
 		);
 
-		const currentExecutingProcess = state.data.find(
-			(item) => item.state === ProcessStates.execution
-		);
+		if (!runnableProcesses.length) return;
 
-		if (!readyProcesses.length && !currentExecutingProcess) return;
-
-		this.runCPUByScalingType(context);
+		this.runCPUByScalingType(context, 'cpu');
 	}
 
 	private runIO(context: StateContext<ProcessesStateModel>) {
@@ -674,59 +648,69 @@ export class ProcessesState {
 
 		if (!state.data.length) return;
 
+		const runnableProcesses = state.data.filter(
+			({ currentType, state }) =>
+				currentType === ProcessTypes.ioBound &&
+				[ProcessStates.ready, ProcessStates.execution].includes(state)
+		);
+
+		if (!runnableProcesses.length) return;
+
+		this.runCPUByScalingType(context, 'io');
+
 		// TODO: estudar para remover este readyIo. Não vi necessidade, sendo que já temos o type
 
-		const readyIOProcesses = state.data.filter(
-			(item) => item.state === ProcessStates.readyIo
-		);
+		// const readyIOProcesses = state.data.filter(
+		// 	(item) => item.state === ProcessStates.readyIo
+		// );
 
-		const currentIOProcess = state.data.find(
-			(item) => item.state === ProcessStates.io
-		);
+		// const currentIOProcess = state.data.find(
+		// 	(item) => item.state === ProcessStates.io
+		// );
 
-		if (!readyIOProcesses.length && !currentIOProcess) return;
+		// if (!readyIOProcesses.length && !currentIOProcess) return;
 
-		if (currentIOProcess) {
-			const dataWithoutIOProcess = state.data.filter(
-				(item) => item.id !== currentIOProcess.id
-			);
+		// if (currentIOProcess) {
+		// 	const dataWithoutIOProcess = state.data.filter(
+		// 		(item) => item.id !== currentIOProcess.id
+		// 	);
 
-			const indexOfFirstProcessWithLessPriority = state.data.findIndex(
-				(item) => item.priority < currentIOProcess.priority
-			);
+		// 	const indexOfFirstProcessWithLessPriority = state.data.findIndex(
+		// 		(item) => item.priority < currentIOProcess.priority
+		// 	);
 
-			if (indexOfFirstProcessWithLessPriority === -1) {
-				const data: Process[] = [...dataWithoutIOProcess, currentIOProcess];
+		// 	if (indexOfFirstProcessWithLessPriority === -1) {
+		// 		const data: Process[] = [...dataWithoutIOProcess, currentIOProcess];
 
-				context.patchState({
-					data: [...data],
-				});
-			} else {
-				dataWithoutIOProcess.splice(
-					indexOfFirstProcessWithLessPriority === 0
-						? 0
-						: indexOfFirstProcessWithLessPriority - 1,
-					0,
-					currentIOProcess
-				);
+		// 		context.patchState({
+		// 			data: [...data],
+		// 		});
+		// 	} else {
+		// 		dataWithoutIOProcess.splice(
+		// 			indexOfFirstProcessWithLessPriority === 0
+		// 				? 0
+		// 				: indexOfFirstProcessWithLessPriority - 1,
+		// 			0,
+		// 			currentIOProcess
+		// 		);
 
-				context.patchState({
-					data: [...dataWithoutIOProcess],
-				});
-			}
+		// 		context.patchState({
+		// 			data: [...dataWithoutIOProcess],
+		// 		});
+		// 	}
 
-			context.dispatch(
-				new Processes.UpdateProcessState(currentIOProcess, ProcessStates.ready)
-			);
-		} else {
-			if (readyIOProcesses.length)
-				context.dispatch(
-					new Processes.UpdateProcessState(
-						readyIOProcesses[0],
-						ProcessStates.io
-					)
-				);
-		}
+		// 	context.dispatch(
+		// 		new Processes.UpdateProcessState(currentIOProcess, ProcessStates.ready)
+		// 	);
+		// } else {
+		// 	if (readyIOProcesses.length)
+		// 		context.dispatch(
+		// 			new Processes.UpdateProcessState(
+		// 				readyIOProcesses[0],
+		// 				ProcessStates.io
+		// 			)
+		// 		);
+		// }
 	}
 
 	@Action(Processes.StopProcesses)

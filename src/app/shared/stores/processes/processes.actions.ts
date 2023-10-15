@@ -28,11 +28,6 @@ export namespace Processes {
 		constructor() {}
 	}
 
-	export class StartIOTimer {
-		static readonly type = '[Processes] Start IO Timer';
-		constructor() {}
-	}
-
 	export class SetIOWaitTime {
 		static readonly type = '[Processes] Set IO Wait Time';
 		constructor(public time: number) {}
