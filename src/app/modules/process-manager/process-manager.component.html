@@ -39,7 +39,7 @@
 
 			<table
 				mat-table
-				[dataSource]="readyProcesses$"
+				[dataSource]="readyCPUProcesses$"
 				class="process-manager__table"
 			>
 				<ng-container matColumnDef="id">
@@ -177,12 +177,12 @@
 					</td>
 				</ng-container>
 
-				<tr mat-header-row *matHeaderRowDef="displayedColumns$ | async"></tr>
+				<tr mat-header-row *matHeaderRowDef="ioColumns"></tr>
 				<tr
 					class="process-row"
 					(click)="editProcess(row)"
 					mat-row
-					*matRowDef="let row; columns: displayedColumns$ | async"
+					*matRowDef="let row; columns: ioColumns"
 				></tr>
 			</table>
 		</div>

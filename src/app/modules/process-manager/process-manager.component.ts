@@ -35,7 +35,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	executingProcess$!: Observable<Process>;
 	@Select(ProcessesState.getIOProcess)
 	ioProcess$!: Observable<Process>;
-	@Select(ProcessesState.getReadyProcesses) readyProcesses$!: Observable<
+	@Select(ProcessesState.getReadyCPUProcesses) readyCPUProcesses$!: Observable<
 		Process[]
 	>;
 	@Select(ProcessesState.getSuspendedAndFinishedProcesses)
@@ -58,6 +58,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	executingProcess?: Process;
 	ioProcess?: Process;
 	maxProcesses = 15;
+	ioColumns: Array<string> = [];
 
 	constructor(private dialog: MatDialog, private store: Store) {}
 
@@ -79,6 +80,14 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 			this.ioProcess$.subscribe(
 				(process) => (this.ioProcess = process ? { ...process } : undefined)
 			)
+		);
+
+		this.subscriptions.add(
+			this.displayedColumns$.subscribe((columns) => {
+				const ioColumns = columns.filter((column) => column !== 'priority');
+
+				this.ioColumns = [...ioColumns];
+			})
 		);
 	}
 
