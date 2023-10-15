@@ -65,8 +65,8 @@ export class CreateProcessDialogComponent implements OnInit {
 		});
 	}
 
-	get isScalingTypeCircular(): boolean {
-		return this.scalingType === ScalingTypesEnum.Circular;
+	get isScalingTypeCircularWithPriorities(): boolean {
+		return this.scalingType === ScalingTypesEnum.CircularWithPriorities;
 	}
 
 	pickColor() {

@@ -164,6 +164,7 @@ export class ProcessesState {
 
 		switch (scalingType) {
 			case ScalingTypesEnum.Circular:
+			case ScalingTypesEnum.FirstInFirstOut:
 				columns = ['id', 'cpuTime', 'processTimeToFinish'];
 				break;
 			case ScalingTypesEnum.CircularWithPriorities:
@@ -559,6 +560,113 @@ export class ProcessesState {
 		}
 	}
 
+	private runFirstInFirstOutProcess(
+		currentExecutingProcess: Process,
+		context: StateContext<ProcessesStateModel>
+	): void {
+		const {
+			data: processes,
+			cpuClock,
+			ioWaitTime,
+			timeSlice,
+		} = context.getState();
+
+		const executingTime =
+			currentExecutingProcess.currentType === ProcessTypes.cpuBound
+				? Math.min(
+						currentExecutingProcess.processTimeToFinish -
+							currentExecutingProcess.cpuTime,
+						cpuClock
+				  )
+				: 1;
+
+		const coolDown =
+			currentExecutingProcess.currentType === ProcessTypes.cpuBound
+				? timeSlice / cpuClock
+				: ioWaitTime / cpuClock;
+
+		currentExecutingProcess.executingTime += executingTime;
+		currentExecutingProcess.cpuTime += executingTime;
+
+		const dataWithoutExecutingProcess = processes.filter(
+			({ id }) => id !== currentExecutingProcess.id
+		);
+
+		if (currentExecutingProcess.executingTime >= coolDown) {
+			currentExecutingProcess.executingTime = 0;
+
+			if (
+				currentExecutingProcess.cpuTime >=
+				currentExecutingProcess.processTimeToFinish
+			) {
+				context.patchState({
+					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+				});
+
+				context.dispatch(
+					new Processes.UpdateProcessState(
+						currentExecutingProcess,
+						ProcessStates.finished
+					)
+				);
+
+				return;
+			}
+
+			context.patchState({
+				data: [currentExecutingProcess, ...dataWithoutExecutingProcess],
+			});
+
+			context.dispatch(
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.ready
+				)
+			);
+
+			return;
+		}
+
+		if (
+			currentExecutingProcess.cpuTime >=
+			currentExecutingProcess.processTimeToFinish
+		) {
+			context.patchState({
+				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+			});
+
+			context.dispatch(
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.finished
+				)
+			);
+
+			return;
+		}
+	}
+
+	private runCPUByFirstInFirstOutType(
+		context: StateContext<ProcessesStateModel>,
+		executionModel: 'cpu' | 'io'
+	): void {
+		const state = context.getState();
+
+		const type =
+			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
+
+		const currentExecutingProcess = state.data.find(
+			({ state, currentType }) =>
+				state === ProcessStates.execution && type === currentType
+		);
+
+		if (currentExecutingProcess) {
+			this.runFirstInFirstOutProcess(currentExecutingProcess, context);
+		} else {
+			this.runFirstProcess(context, executionModel);
+		}
+	}
+
 	private runCPUByScalingType(
 		context: StateContext<ProcessesStateModel>,
 		executionModel: 'cpu' | 'io'
@@ -571,6 +679,9 @@ export class ProcessesState {
 				break;
 			case ScalingTypesEnum.CircularWithPriorities:
 				this.runCPUByCircularWithPrioritiesType(context, executionModel);
+				break;
+			case ScalingTypesEnum.FirstInFirstOut:
+				this.runCPUByFirstInFirstOutType(context, executionModel);
 				break;
 			default:
 				break;

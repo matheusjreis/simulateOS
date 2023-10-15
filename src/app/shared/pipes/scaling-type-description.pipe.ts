@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+
 import { ScalingTypesEnum } from '../constants/scaling-types.constants';
 
 @Pipe({
@@ -11,6 +12,8 @@ export class ScalingTypeDescriptionPipe implements PipeTransform {
 				return 'Circular';
 			case ScalingTypesEnum.CircularWithPriorities:
 				return 'Circular com Prioridades';
+			case ScalingTypesEnum.FirstInFirstOut:
+				return 'Primeiro a Entrar, Primeiro a Sair';
 			default:
 				return '--';
 		}
