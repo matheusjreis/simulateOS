@@ -298,14 +298,12 @@ export class ProcessesState {
 
 		data[index] = updatedProcess;
 
-		if (updatedProcess.currentType !== ProcessTypes.ioBound) {
-			context.dispatch(
-				new Logs.CreateLog({
-					process: updatedProcess,
-					timer,
-				})
-			);
-		}
+		context.dispatch(
+			new Logs.CreateLog({
+				process: updatedProcess,
+				timer,
+			})
+		);
 
 		context.patchState({
 			data: [...data],
