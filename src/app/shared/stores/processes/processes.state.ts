@@ -607,60 +607,6 @@ export class ProcessesState {
 		if (!runnableProcesses.length) return;
 
 		this.runCPUByScalingType(context, 'io');
-
-		// TODO: estudar para remover este readyIo. Não vi necessidade, sendo que já temos o type
-
-		// const readyIOProcesses = state.data.filter(
-		// 	(item) => item.state === ProcessStates.readyIo
-		// );
-
-		// const currentIOProcess = state.data.find(
-		// 	(item) => item.state === ProcessStates.io
-		// );
-
-		// if (!readyIOProcesses.length && !currentIOProcess) return;
-
-		// if (currentIOProcess) {
-		// 	const dataWithoutIOProcess = state.data.filter(
-		// 		(item) => item.id !== currentIOProcess.id
-		// 	);
-
-		// 	const indexOfFirstProcessWithLessPriority = state.data.findIndex(
-		// 		(item) => item.priority < currentIOProcess.priority
-		// 	);
-
-		// 	if (indexOfFirstProcessWithLessPriority === -1) {
-		// 		const data: Process[] = [...dataWithoutIOProcess, currentIOProcess];
-
-		// 		context.patchState({
-		// 			data: [...data],
-		// 		});
-		// 	} else {
-		// 		dataWithoutIOProcess.splice(
-		// 			indexOfFirstProcessWithLessPriority === 0
-		// 				? 0
-		// 				: indexOfFirstProcessWithLessPriority - 1,
-		// 			0,
-		// 			currentIOProcess
-		// 		);
-
-		// 		context.patchState({
-		// 			data: [...dataWithoutIOProcess],
-		// 		});
-		// 	}
-
-		// 	context.dispatch(
-		// 		new Processes.UpdateProcessState(currentIOProcess, ProcessStates.ready)
-		// 	);
-		// } else {
-		// 	if (readyIOProcesses.length)
-		// 		context.dispatch(
-		// 			new Processes.UpdateProcessState(
-		// 				readyIOProcesses[0],
-		// 				ProcessStates.io
-		// 			)
-		// 		);
-		// }
 	}
 
 	@Action(Processes.StopProcesses)
