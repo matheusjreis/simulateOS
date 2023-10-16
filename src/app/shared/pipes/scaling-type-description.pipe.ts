@@ -13,7 +13,7 @@ export class ScalingTypeDescriptionPipe implements PipeTransform {
 			case ScalingTypesEnum.CircularWithPriorities:
 				return 'Circular com Prioridades';
 			case ScalingTypesEnum.FirstInFirstOut:
-				return 'Primeiro a Entrar, Primeiro a Sair';
+				return 'FIFO';
 			default:
 				return '--';
 		}
