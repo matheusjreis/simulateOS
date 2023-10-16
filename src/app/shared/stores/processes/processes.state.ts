@@ -564,12 +564,9 @@ export class ProcessesState {
 		currentExecutingProcess: Process,
 		context: StateContext<ProcessesStateModel>
 	): void {
-		const {
-			data: processes,
-			cpuClock,
-			ioWaitTime,
-			timeSlice,
-		} = context.getState();
+		debugger;
+
+		const { data: processes, cpuClock } = context.getState();
 
 		const executingTime =
 			currentExecutingProcess.currentType === ProcessTypes.cpuBound
@@ -580,52 +577,12 @@ export class ProcessesState {
 				  )
 				: 1;
 
-		const coolDown =
-			currentExecutingProcess.currentType === ProcessTypes.cpuBound
-				? timeSlice / cpuClock
-				: ioWaitTime / cpuClock;
-
 		currentExecutingProcess.executingTime += executingTime;
 		currentExecutingProcess.cpuTime += executingTime;
 
 		const dataWithoutExecutingProcess = processes.filter(
 			({ id }) => id !== currentExecutingProcess.id
 		);
-
-		if (currentExecutingProcess.executingTime >= coolDown) {
-			currentExecutingProcess.executingTime = 0;
-
-			if (
-				currentExecutingProcess.cpuTime >=
-				currentExecutingProcess.processTimeToFinish
-			) {
-				context.patchState({
-					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
-				});
-
-				context.dispatch(
-					new Processes.UpdateProcessState(
-						currentExecutingProcess,
-						ProcessStates.finished
-					)
-				);
-
-				return;
-			}
-
-			context.patchState({
-				data: [currentExecutingProcess, ...dataWithoutExecutingProcess],
-			});
-
-			context.dispatch(
-				new Processes.UpdateProcessState(
-					currentExecutingProcess,
-					ProcessStates.ready
-				)
-			);
-
-			return;
-		}
 
 		if (
 			currentExecutingProcess.cpuTime >=
