@@ -15,7 +15,11 @@ export namespace Processes {
 
 	export class UpdateProcessState {
 		static readonly type = '[Processes] Update Process State';
-		constructor(public process: Process, public state: ProcessStatesType) {}
+		constructor(
+			public process: Process,
+			public state: ProcessStatesType,
+			public timeLeft?: number
+		) {}
 	}
 
 	export class UpdateProcessPriority {

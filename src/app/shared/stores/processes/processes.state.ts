@@ -306,10 +306,12 @@ export class ProcessesState {
 
 		data[index] = updatedProcess;
 
+		const timeLeft = action.timeLeft;
+
 		context.dispatch(
 			new Logs.CreateLog({
 				process: updatedProcess,
-				timer,
+				timer: timeLeft ? timer - timeLeft : timer,
 			})
 		);
 
@@ -414,7 +416,8 @@ export class ProcessesState {
 				context.dispatch(
 					new Processes.UpdateProcessState(
 						currentExecutingProcess,
-						ProcessStates.finished
+						ProcessStates.finished,
+						cpuClock > executingTime ? cpuClock - executingTime : undefined
 					)
 				);
 
@@ -446,7 +449,8 @@ export class ProcessesState {
 			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
-					ProcessStates.finished
+					ProcessStates.finished,
+					cpuClock > executingTime ? cpuClock - executingTime : undefined
 				)
 			);
 
@@ -564,8 +568,6 @@ export class ProcessesState {
 		currentExecutingProcess: Process,
 		context: StateContext<ProcessesStateModel>
 	): void {
-		debugger;
-
 		const { data: processes, cpuClock } = context.getState();
 
 		const executingTime =
@@ -595,11 +597,10 @@ export class ProcessesState {
 			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
-					ProcessStates.finished
+					ProcessStates.finished,
+					cpuClock > executingTime ? cpuClock - executingTime : undefined
 				)
 			);
-
-			return;
 		}
 	}
 
