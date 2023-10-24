@@ -41,8 +41,8 @@ interface ChartOptions {
 export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 	@ViewChild('chart') chart!: ChartComponent;
 	subscription = new Subscription();
-	@Select(ProcessesState.getFinishedProcesses)
-	getFinishedProcesses$!: Observable<Array<Process>>;
+	@Select(ProcessesState.getFinishedCPUBoundProcesses)
+	getFinishedCPUBoundProcesses$!: Observable<Array<Process>>;
 	@Select(ProcessesState.getDisplayedColumns)
 	getDisplayedColumns$!: Observable<string>;
 	@Select(LogsState.getLogs)
@@ -74,12 +74,14 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 		);
 
 		this.subscription.add(
-			this.getFinishedProcesses$.pipe(take(1)).subscribe((processes) => {
-				this.finishedProcesses = processes.map((process) => ({
-					...process,
-					checked: false,
-				}));
-			})
+			this.getFinishedCPUBoundProcesses$
+				.pipe(take(1))
+				.subscribe((processes) => {
+					this.finishedProcesses = processes.map((process) => ({
+						...process,
+						checked: false,
+					}));
+				})
 		);
 
 		this.subscription.add(
@@ -110,6 +112,14 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 				child.style.fill = colors[index];
 			}
 		);
+	}
+
+	private removeDownloadCSVButton(): void {
+		const downloadButton = this.document.querySelector('.exportCSV');
+
+		if (!downloadButton) return;
+
+		downloadButton.remove();
 	}
 
 	generateChart(): void {
@@ -180,11 +190,6 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 				chart: {
 					height: logsByPID.length * barHeight + 100,
 					type: 'rangeBar',
-					toolbar: {
-						tools: {
-							download: false,
-						},
-					},
 				},
 				plotOptions: {
 					bar: {
@@ -200,6 +205,7 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 			setTimeout(() => {
 				this.changedChartLabels(labelsColors);
 				this.scrollDialogContainerToBottom();
+				this.removeDownloadCSVButton();
 			}, 0);
 		}, 0);
 	}
