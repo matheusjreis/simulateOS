@@ -15,11 +15,7 @@ export namespace Processes {
 
 	export class UpdateProcessState {
 		static readonly type = '[Processes] Update Process State';
-		constructor(
-			public process: Process,
-			public state: ProcessStatesType,
-			public timeLeft?: number
-		) {}
+		constructor(public process: Process, public state: ProcessStatesType) {}
 	}
 
 	export class UpdateProcessPriority {
@@ -40,11 +36,6 @@ export namespace Processes {
 	export class SetTimeSlice {
 		static readonly type = '[Processes] Set Time Slice';
 		constructor(public time: number) {}
-	}
-
-	export class SetCpuClock {
-		static readonly type = '[Processes] Set CPU Clock';
-		constructor(public clock: number) {}
 	}
 
 	export class StopProcesses {
