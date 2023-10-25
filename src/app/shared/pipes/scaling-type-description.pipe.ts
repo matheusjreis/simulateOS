@@ -14,6 +14,8 @@ export class ScalingTypeDescriptionPipe implements PipeTransform {
 				return 'Circular com Prioridades';
 			case ScalingTypesEnum.FirstInFirstOut:
 				return 'FIFO';
+			case ScalingTypesEnum.ShortestRemainingTimeNext:
+				return 'SRTN';
 			default:
 				return '--';
 		}
