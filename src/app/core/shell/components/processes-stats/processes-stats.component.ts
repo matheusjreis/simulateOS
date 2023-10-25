@@ -23,7 +23,6 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 	@Select(ProcessesState.getTimer) timer$!: Observable<number>;
 	@Select(ProcessesState.getIOWaitTime) ioWaitTime$!: Observable<number>;
 	@Select(ProcessesState.getTimeSlice) timeSlice$!: Observable<number>;
-	@Select(ProcessesState.getCpuClock) cpuClock$!: Observable<number>;
 	@Select(ProcessesState.getCurrentScalingType)
 	scalingType$!: Observable<ScalingTypesEnum>;
 	formGroup!: FormGroup;
@@ -36,7 +35,6 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 		this.formGroup = this.formBuilder.group({
 			ioWaitTime: [null],
 			timeSlice: [null],
-			cpuClock: [null],
 		});
 	}
 
@@ -50,12 +48,6 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 		this.subscriptions.add(
 			this.formGroup.get('timeSlice')?.valueChanges.subscribe((value) => {
 				this.store.dispatch(new Processes.SetTimeSlice(value));
-			})
-		);
-
-		this.subscriptions.add(
-			this.formGroup.get('cpuClock')?.valueChanges.subscribe((value) => {
-				this.store.dispatch(new Processes.SetCpuClock(value));
 			})
 		);
 	}
@@ -76,10 +68,6 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 
 	changeTimeSlice(event: MatSliderChange) {
 		this.store.dispatch(new Processes.SetTimeSlice(event.value!));
-	}
-
-	changeCpuClock(event: MatSliderChange) {
-		this.store.dispatch(new Processes.SetCpuClock(event.value!));
 	}
 
 	handleOpenSelectScalingType() {
@@ -149,12 +137,6 @@ export class ProcessesStatsComponent implements OnInit, OnDestroy {
 				this.formGroup
 					.get('timeSlice')
 					?.setValue(timeSlice, { emitEvent: false })
-			)
-		);
-
-		this.subscriptions.add(
-			this.cpuClock$.subscribe((cpuClock) =>
-				this.formGroup.get('cpuClock')?.setValue(cpuClock, { emitEvent: false })
 			)
 		);
 
