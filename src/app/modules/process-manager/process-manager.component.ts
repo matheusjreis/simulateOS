@@ -35,7 +35,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	executingProcess$!: Observable<Process>;
 	@Select(ProcessesState.getIOProcess)
 	ioProcess$!: Observable<Process>;
-	@Select(ProcessesState.getReadyCPUProcesses) readyCPUProcesses$!: Observable<
+	@Select(ProcessesState.getReadyProcesses) readyProcesses$!: Observable<
 		Process[]
 	>;
 	@Select(ProcessesState.getSuspendedAndFinishedProcesses)
@@ -131,9 +131,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 		const dialogRef = this.dialog.open(EditProcessDialogComponent, {
 			width: '600px',
 			disableClose: true,
-			data: {
-				process,
-			},
+			data: { process },
 		});
 
 		dialogRef.afterClosed().subscribe((res?: CreateProcessDTO) => {
@@ -162,7 +160,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	}
 
 	openActionsMenu(process: Process) {
-		this.actionsMenu.menuData = { process: process };
+		this.actionsMenu.menuData = { process };
 		this.actionsMenu.openMenu();
 	}
 
