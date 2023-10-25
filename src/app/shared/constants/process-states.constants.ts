@@ -2,13 +2,17 @@ export type ProcessStatesType =
 	| 'ready'
 	| 'execution'
 	| 'suspended'
-	| 'finished';
+	| 'finished'
+	| 'ioReady'
+	| 'ioExecution';
 
 export interface IProcessStates {
 	ready: ProcessStatesType;
 	execution: ProcessStatesType;
 	suspended: ProcessStatesType;
 	finished: ProcessStatesType;
+	ioReady: ProcessStatesType;
+	ioExecution: ProcessStatesType;
 }
 
 export const ProcessStates: IProcessStates = {
@@ -16,6 +20,8 @@ export const ProcessStates: IProcessStates = {
 	execution: 'execution',
 	suspended: 'suspended',
 	finished: 'finished',
+	ioExecution: 'ioExecution',
+	ioReady: 'ioReady',
 };
 
 export const ProcessStatesNames = {
@@ -23,6 +29,8 @@ export const ProcessStatesNames = {
 	execution: 'Execução',
 	suspended: 'Suspenso',
 	finished: 'finished',
+	ioExecution: 'Execução IO',
+	ioReady: 'IO Pronto',
 };
 
 export const ProcessStatesColors = {
@@ -30,4 +38,6 @@ export const ProcessStatesColors = {
 	execution: 'accent',
 	suspended: 'warn',
 	finished: 'finished',
+	ioReady: 'primary',
+	ioExecution: 'accent',
 };
