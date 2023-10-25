@@ -24,6 +24,7 @@ import { ProcessesState } from './shared/stores/processes/processes.state';
 			key: [ProcessesState, LogsState],
 		}),
 		NgxsModule.forRoot([ProcessesState, LogsState]),
+		// O modulo abaixo gera os logs via console
 		// NgxsLoggerPluginModule.forRoot(),
 		NgxsReduxDevtoolsPluginModule.forRoot(),
 	],
