@@ -62,21 +62,6 @@ export class ProcessesState {
 	}
 
 	@Selector()
-	static getReadyCPUProcesses(state: ProcessesStateModel) {
-		const { scalingType, data } = state;
-
-		const readyCPUProcesses = data.filter(
-			({ state, currentType }) =>
-				state === ProcessStates.ready && currentType === ProcessTypes.cpuBound
-		);
-
-		if (scalingType === ScalingTypesEnum.CircularWithPriorities)
-			readyCPUProcesses.sort((a, b) => b.priority - a.priority);
-
-		return readyCPUProcesses;
-	}
-
-	@Selector()
 	static getReadyProcesses(state: ProcessesStateModel) {
 		const { scalingType, data } = state;
 
@@ -177,6 +162,7 @@ export class ProcessesState {
 		switch (scalingType) {
 			case ScalingTypesEnum.Circular:
 			case ScalingTypesEnum.FirstInFirstOut:
+			case ScalingTypesEnum.ShortestRemainingTimeNext:
 				columns = ['id', 'cpuTime', 'processTimeToFinish'];
 				break;
 			case ScalingTypesEnum.CircularWithPriorities:
@@ -513,9 +499,7 @@ export class ProcessesState {
 		const state = context.getState();
 
 		const currentExecutingProcess = state.data.find(
-			({ state, currentType }) =>
-				state === ProcessStates.execution &&
-				currentType === ProcessTypes.cpuBound
+			({ state }) => state === ProcessStates.execution
 		);
 
 		if (currentExecutingProcess) {
@@ -586,6 +570,52 @@ export class ProcessesState {
 		}
 	}
 
+	private runShortestRemainingTime(
+		context: StateContext<ProcessesStateModel>
+	): void {
+		const state = context.getState();
+
+		const readyProcesses = state.data.filter(
+			({ state }) => state === ProcessStates.ready
+		);
+
+		const aux = [...readyProcesses];
+
+		aux.sort(
+			(a, b) =>
+				a.processTimeToFinish - a.cpuTime - (b.processTimeToFinish - b.cpuTime)
+		);
+
+		const shortestRemainingTimeProcess = aux[0];
+
+		if (!shortestRemainingTimeProcess) return;
+
+		context.dispatch(
+			new Processes.UpdateProcessState(
+				shortestRemainingTimeProcess,
+				ProcessStates.execution
+			)
+		);
+	}
+
+	private runCPUByShortestRemainingTimeNext(
+		context: StateContext<ProcessesStateModel>
+	): void {
+		const state = context.getState();
+
+		const currentExecutingProcess = state.data.find(
+			({ state, currentType }) =>
+				state === ProcessStates.execution &&
+				currentType === ProcessTypes.cpuBound
+		);
+
+		if (currentExecutingProcess) {
+			this.runCircularProcess(currentExecutingProcess, context);
+		} else {
+			this.runShortestRemainingTime(context);
+		}
+	}
+
 	private runCPUByScalingType(
 		context: StateContext<ProcessesStateModel>
 	): void {
@@ -600,6 +630,9 @@ export class ProcessesState {
 				break;
 			case ScalingTypesEnum.FirstInFirstOut:
 				this.runCPUByFirstInFirstOutType(context);
+				break;
+			case ScalingTypesEnum.ShortestRemainingTimeNext:
+				this.runCPUByShortestRemainingTimeNext(context);
 				break;
 			default:
 				break;
