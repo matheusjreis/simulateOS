@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Action, Selector, State, StateContext } from '@ngxs/store';
 import { tap } from 'rxjs';
+
 import { Color, ProcessColors } from '../../constants/process-colors.constants';
 import { ProcessStates } from '../../constants/process-states.constants';
 import { ProcessTypes } from '../../constants/process-types.constants';
@@ -16,7 +17,6 @@ export interface ProcessesStateModel {
 	timer: number;
 	ioWaitTime: number;
 	timeSlice: number;
-	cpuClock: number;
 	scalingType: ScalingTypesEnum;
 	displayedColumns: Array<string>;
 }
@@ -29,7 +29,6 @@ export interface ProcessesStateModel {
 		timer: 0,
 		ioWaitTime: 1,
 		timeSlice: 2,
-		cpuClock: 1,
 		scalingType: ScalingTypesEnum.Circular,
 		displayedColumns: ['id', 'cpuTime', 'processTimeToFinish'],
 	},
@@ -50,11 +49,7 @@ export class ProcessesState {
 
 	@Selector()
 	static getExecutingProcess(state: ProcessesStateModel) {
-		return state.data.find(
-			({ currentType, state }) =>
-				currentType === ProcessTypes.cpuBound &&
-				state === ProcessStates.execution
-		);
+		return state.data.find(({ state }) => state === ProcessStates.execution);
 	}
 
 	@Selector()
@@ -62,7 +57,7 @@ export class ProcessesState {
 		return state.data.find(
 			({ currentType, state }) =>
 				currentType === ProcessTypes.ioBound &&
-				state === ProcessStates.execution
+				state === ProcessStates.ioExecution
 		);
 	}
 
@@ -82,6 +77,20 @@ export class ProcessesState {
 	}
 
 	@Selector()
+	static getReadyProcesses(state: ProcessesStateModel) {
+		const { scalingType, data } = state;
+
+		const readyProcesses = data.filter(
+			({ state }) => state === ProcessStates.ready
+		);
+
+		if (scalingType === ScalingTypesEnum.CircularWithPriorities)
+			readyProcesses.sort((a, b) => b.priority - a.priority);
+
+		return readyProcesses;
+	}
+
+	@Selector()
 	static getSuspendedProcesses(state: ProcessesStateModel) {
 		return state.data.filter((item) => item.state === ProcessStates.suspended);
 	}
@@ -89,6 +98,14 @@ export class ProcessesState {
 	@Selector()
 	static getFinishedProcesses(state: ProcessesStateModel) {
 		return state.data.filter(({ state }) => state === ProcessStates.finished);
+	}
+
+	@Selector()
+	static getFinishedCPUBoundProcesses(state: ProcessesStateModel) {
+		return state.data.filter(
+			({ state, type }) =>
+				state === ProcessStates.finished && type === ProcessTypes.cpuBound
+		);
 	}
 
 	@Selector()
@@ -107,7 +124,7 @@ export class ProcessesState {
 	static getIOQueueProcesses(state: ProcessesStateModel) {
 		return state.data.filter(
 			({ state, currentType }) =>
-				state === ProcessStates.ready && currentType === ProcessTypes.ioBound
+				state === ProcessStates.ioReady && currentType === ProcessTypes.ioBound
 		);
 	}
 
@@ -119,11 +136,6 @@ export class ProcessesState {
 	@Selector()
 	static getTimeSlice(state: ProcessesStateModel) {
 		return state.timeSlice;
-	}
-
-	@Selector()
-	static getCpuClock(state: ProcessesStateModel) {
-		return state.cpuClock;
 	}
 
 	@Selector()
@@ -306,14 +318,14 @@ export class ProcessesState {
 
 		data[index] = updatedProcess;
 
-		const timeLeft = action.timeLeft;
-
-		context.dispatch(
-			new Logs.CreateLog({
-				process: updatedProcess,
-				timer: timeLeft ? timer - timeLeft : timer,
-			})
-		);
+		if (action.process.currentType === ProcessTypes.cpuBound) {
+			context.dispatch(
+				new Logs.CreateLog({
+					process: updatedProcess,
+					timer,
+				})
+			);
+		}
 
 		context.patchState({
 			data: [...data],
@@ -350,20 +362,12 @@ export class ProcessesState {
 		context.patchState({ timeSlice: action.time });
 	}
 
-	@Action(Processes.SetCpuClock)
-	setCpuClock(
-		context: StateContext<ProcessesStateModel>,
-		action: Processes.SetCpuClock
-	) {
-		context.patchState({ cpuClock: action.clock });
-	}
-
 	@Action(Processes.IncrementTimer)
 	incrementTimer(context: StateContext<ProcessesStateModel>) {
 		const state = context.getState();
 
 		context.patchState({
-			timer: state.timer + state.cpuClock,
+			timer: state.timer + 1,
 		});
 
 		this.runCPU(context);
@@ -374,29 +378,15 @@ export class ProcessesState {
 		currentExecutingProcess: Process,
 		context: StateContext<ProcessesStateModel>
 	): void {
-		const {
-			data: processes,
-			cpuClock,
-			ioWaitTime,
-			timeSlice,
-		} = context.getState();
-
-		const executingTime =
-			currentExecutingProcess.currentType === ProcessTypes.cpuBound
-				? Math.min(
-						currentExecutingProcess.processTimeToFinish -
-							currentExecutingProcess.cpuTime,
-						cpuClock
-				  )
-				: 1;
+		const { data: processes, timeSlice } = context.getState();
 
 		const coolDown =
 			currentExecutingProcess.currentType === ProcessTypes.cpuBound
-				? timeSlice / cpuClock
-				: ioWaitTime / cpuClock;
+				? timeSlice
+				: 1;
 
-		currentExecutingProcess.executingTime += executingTime;
-		currentExecutingProcess.cpuTime += executingTime;
+		currentExecutingProcess.executingTime += 1;
+		currentExecutingProcess.cpuTime += 1;
 
 		const dataWithoutExecutingProcess = processes.filter(
 			({ id }) => id !== currentExecutingProcess.id
@@ -416,13 +406,15 @@ export class ProcessesState {
 				context.dispatch(
 					new Processes.UpdateProcessState(
 						currentExecutingProcess,
-						ProcessStates.finished,
-						cpuClock > executingTime ? cpuClock - executingTime : undefined
+						ProcessStates.finished
 					)
 				);
 
 				return;
 			}
+
+			if (currentExecutingProcess.currentType === ProcessTypes.ioBound)
+				currentExecutingProcess.executingTime = 0;
 
 			context.patchState({
 				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
@@ -431,7 +423,9 @@ export class ProcessesState {
 			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
-					ProcessStates.ready
+					currentExecutingProcess.currentType === ProcessTypes.cpuBound
+						? ProcessStates.ready
+						: ProcessStates.ioReady
 				)
 			);
 
@@ -449,27 +443,17 @@ export class ProcessesState {
 			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
-					ProcessStates.finished,
-					cpuClock > executingTime ? cpuClock - executingTime : undefined
+					ProcessStates.finished
 				)
 			);
-
-			return;
 		}
 	}
 
-	private runFirstProcess(
-		context: StateContext<ProcessesStateModel>,
-		executionModel: 'cpu' | 'io'
-	): void {
+	private runFirstProcess(context: StateContext<ProcessesStateModel>): void {
 		const state = context.getState();
 
-		const type =
-			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
-
 		const firstProcess = state.data.find(
-			({ state, currentType }) =>
-				state === ProcessStates.ready && type === currentType
+			({ state }) => state === ProcessStates.ready
 		);
 
 		if (!firstProcess) return;
@@ -480,46 +464,28 @@ export class ProcessesState {
 	}
 
 	private runCPUByCircularType(
-		context: StateContext<ProcessesStateModel>,
-		executionModel: 'cpu' | 'io'
+		context: StateContext<ProcessesStateModel>
 	): void {
 		const state = context.getState();
 
-		const type =
-			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
-
 		const currentExecutingProcess = state.data.find(
-			({ state, currentType }) =>
-				state === ProcessStates.execution && type === currentType
+			({ state }) => state === ProcessStates.execution
 		);
 
 		if (currentExecutingProcess) {
 			this.runCircularProcess(currentExecutingProcess, context);
 		} else {
-			this.runFirstProcess(context, executionModel);
+			this.runFirstProcess(context);
 		}
 	}
 
 	private runHighestPriorityProcess(
-		context: StateContext<ProcessesStateModel>,
-		executionModel: 'cpu' | 'io'
+		context: StateContext<ProcessesStateModel>
 	): void {
 		const state = context.getState();
 
-		const type =
-			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
-
-		if (type === ProcessTypes.ioBound) {
-			// IO bound processes are not affected by priorities
-
-			this.runFirstProcess(context, executionModel);
-
-			return;
-		}
-
 		const readyProcesses = state.data.filter(
-			({ state, currentType }) =>
-				state === ProcessStates.ready && currentType === type
+			({ state }) => state === ProcessStates.ready
 		);
 
 		const highestPriority = readyProcesses.reduce((prv, cur) =>
@@ -528,9 +494,7 @@ export class ProcessesState {
 
 		const highestPriorityProcess = state.data.find(
 			(item) =>
-				item.priority === highestPriority &&
-				item.state === ProcessStates.ready &&
-				item.currentType === type
+				item.priority === highestPriority && item.state === ProcessStates.ready
 		);
 
 		if (!highestPriorityProcess) return;
@@ -544,23 +508,20 @@ export class ProcessesState {
 	}
 
 	private runCPUByCircularWithPrioritiesType(
-		context: StateContext<ProcessesStateModel>,
-		executionModel: 'cpu' | 'io'
+		context: StateContext<ProcessesStateModel>
 	): void {
 		const state = context.getState();
 
-		const type =
-			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
-
 		const currentExecutingProcess = state.data.find(
 			({ state, currentType }) =>
-				state === ProcessStates.execution && type === currentType
+				state === ProcessStates.execution &&
+				currentType === ProcessTypes.cpuBound
 		);
 
 		if (currentExecutingProcess) {
 			this.runCircularProcess(currentExecutingProcess, context);
 		} else {
-			this.runHighestPriorityProcess(context, executionModel);
+			this.runHighestPriorityProcess(context);
 		}
 	}
 
@@ -568,19 +529,10 @@ export class ProcessesState {
 		currentExecutingProcess: Process,
 		context: StateContext<ProcessesStateModel>
 	): void {
-		const { data: processes, cpuClock } = context.getState();
+		const { data: processes } = context.getState();
 
-		const executingTime =
-			currentExecutingProcess.currentType === ProcessTypes.cpuBound
-				? Math.min(
-						currentExecutingProcess.processTimeToFinish -
-							currentExecutingProcess.cpuTime,
-						cpuClock
-				  )
-				: 1;
-
-		currentExecutingProcess.executingTime += executingTime;
-		currentExecutingProcess.cpuTime += executingTime;
+		currentExecutingProcess.executingTime += 1;
+		currentExecutingProcess.cpuTime += 1;
 
 		const dataWithoutExecutingProcess = processes.filter(
 			({ id }) => id !== currentExecutingProcess.id
@@ -597,49 +549,57 @@ export class ProcessesState {
 			context.dispatch(
 				new Processes.UpdateProcessState(
 					currentExecutingProcess,
-					ProcessStates.finished,
-					cpuClock > executingTime ? cpuClock - executingTime : undefined
+					ProcessStates.finished
+				)
+			);
+		}
+
+		if (currentExecutingProcess.currentType === ProcessTypes.ioBound) {
+			currentExecutingProcess.executingTime = 0;
+
+			context.patchState({
+				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+			});
+
+			context.dispatch(
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.ioReady
 				)
 			);
 		}
 	}
 
 	private runCPUByFirstInFirstOutType(
-		context: StateContext<ProcessesStateModel>,
-		executionModel: 'cpu' | 'io'
+		context: StateContext<ProcessesStateModel>
 	): void {
 		const state = context.getState();
 
-		const type =
-			executionModel === 'cpu' ? ProcessTypes.cpuBound : ProcessTypes.ioBound;
-
 		const currentExecutingProcess = state.data.find(
-			({ state, currentType }) =>
-				state === ProcessStates.execution && type === currentType
+			({ state }) => state === ProcessStates.execution
 		);
 
 		if (currentExecutingProcess) {
 			this.runFirstInFirstOutProcess(currentExecutingProcess, context);
 		} else {
-			this.runFirstProcess(context, executionModel);
+			this.runFirstProcess(context);
 		}
 	}
 
 	private runCPUByScalingType(
-		context: StateContext<ProcessesStateModel>,
-		executionModel: 'cpu' | 'io'
+		context: StateContext<ProcessesStateModel>
 	): void {
 		const { scalingType } = context.getState();
 
 		switch (scalingType) {
 			case ScalingTypesEnum.Circular:
-				this.runCPUByCircularType(context, executionModel);
+				this.runCPUByCircularType(context);
 				break;
 			case ScalingTypesEnum.CircularWithPriorities:
-				this.runCPUByCircularWithPrioritiesType(context, executionModel);
+				this.runCPUByCircularWithPrioritiesType(context);
 				break;
 			case ScalingTypesEnum.FirstInFirstOut:
-				this.runCPUByFirstInFirstOutType(context, executionModel);
+				this.runCPUByFirstInFirstOutType(context);
 				break;
 			default:
 				break;
@@ -651,15 +611,104 @@ export class ProcessesState {
 
 		if (!state.data.length) return;
 
-		const runnableProcesses = state.data.filter(
-			({ currentType, state }) =>
-				currentType === ProcessTypes.cpuBound &&
-				[ProcessStates.ready, ProcessStates.execution].includes(state)
+		const runnableProcesses = state.data.filter(({ state }) =>
+			[ProcessStates.ready, ProcessStates.execution].includes(state)
 		);
 
 		if (!runnableProcesses.length) return;
 
-		this.runCPUByScalingType(context, 'cpu');
+		this.runCPUByScalingType(context);
+	}
+
+	private runFirstIOProcess(context: StateContext<ProcessesStateModel>): void {
+		const state = context.getState();
+
+		const firstProcess = state.data.find(
+			({ state }) => state === ProcessStates.ioReady
+		);
+
+		if (!firstProcess) return;
+
+		context.dispatch(
+			new Processes.UpdateProcessState(firstProcess, ProcessStates.ioExecution)
+		);
+	}
+
+	private runIOProcess(
+		currentExecutingProcess: Process,
+		context: StateContext<ProcessesStateModel>
+	): void {
+		const { data, ioWaitTime } = context.getState();
+
+		currentExecutingProcess.executingTime += 1;
+		currentExecutingProcess.cpuTime += 1;
+
+		const dataWithoutExecutingProcess = data.filter(
+			({ id }) => id !== currentExecutingProcess.id
+		);
+
+		if (currentExecutingProcess.executingTime >= ioWaitTime) {
+			currentExecutingProcess.executingTime = 0;
+
+			if (
+				currentExecutingProcess.cpuTime >=
+				currentExecutingProcess.processTimeToFinish
+			) {
+				context.patchState({
+					data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+				});
+
+				context.dispatch(
+					new Processes.UpdateProcessState(
+						currentExecutingProcess,
+						ProcessStates.finished
+					)
+				);
+
+				return;
+			}
+
+			context.patchState({
+				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+			});
+
+			context.dispatch(
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.ready
+				)
+			);
+		}
+
+		if (
+			currentExecutingProcess.cpuTime >=
+			currentExecutingProcess.processTimeToFinish
+		) {
+			context.patchState({
+				data: [...dataWithoutExecutingProcess, currentExecutingProcess],
+			});
+
+			context.dispatch(
+				new Processes.UpdateProcessState(
+					currentExecutingProcess,
+					ProcessStates.finished
+				)
+			);
+		}
+	}
+
+	private handleIOProcess(context: StateContext<ProcessesStateModel>): void {
+		const state = context.getState();
+
+		const currentExecutingProcess = state.data.find(
+			({ state }) => state === ProcessStates.ioExecution
+		);
+
+		if (currentExecutingProcess) {
+			this.runIOProcess(currentExecutingProcess, context);
+		} else {
+			this.runFirstIOProcess(context);
+		}
 	}
 
 	private runIO(context: StateContext<ProcessesStateModel>) {
@@ -670,12 +719,12 @@ export class ProcessesState {
 		const runnableProcesses = state.data.filter(
 			({ currentType, state }) =>
 				currentType === ProcessTypes.ioBound &&
-				[ProcessStates.ready, ProcessStates.execution].includes(state)
+				[ProcessStates.ioReady, ProcessStates.ioExecution].includes(state)
 		);
 
 		if (!runnableProcesses.length) return;
 
-		this.runCPUByScalingType(context, 'io');
+		this.handleIOProcess(context);
 	}
 
 	@Action(Processes.StopProcesses)
@@ -686,7 +735,8 @@ export class ProcessesState {
 
 		context.patchState({
 			data: [],
-			colors: ProcessColors,
+			ioWaitTime: 1,
+			timeSlice: 2,
 			timer: 0,
 		});
 

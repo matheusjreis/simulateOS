@@ -197,7 +197,7 @@
 	</div>
 
 	<div
-		*ngIf="(finishedProcesses$ | async)?.length !== 0"
+		*ngIf="(getFinishedCPUBoundProcesses$ | async)?.length !== 0"
 		class="process-lifetime-dialog-button-block"
 	>
 		<div>
@@ -212,15 +212,7 @@
 	</div>
 
 	<div class="process-manager__table">
-		<table
-			mat-table
-			[dataSource]="suspendedFinishedProcesses$"
-			[ngStyle]="
-				((suspendedFinishedProcesses$ | async)?.length || 0) > 0
-					? { height: '400px' }
-					: null
-			"
-		>
+		<table mat-table [dataSource]="suspendedFinishedProcesses$">
 			<ng-container matColumnDef="id">
 				<th mat-header-cell *matHeaderCellDef>PID</th>
 				<td mat-cell *matCellDef="let process">

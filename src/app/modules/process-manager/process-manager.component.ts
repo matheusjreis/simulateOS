@@ -47,6 +47,8 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	displayedColumns$!: Observable<Array<string>>;
 	@Select(ProcessesState.getFinishedProcesses)
 	finishedProcesses$!: Observable<Array<string>>;
+	@Select(ProcessesState.getFinishedCPUBoundProcesses)
+	getFinishedCPUBoundProcesses$!: Observable<Array<Process>>;
 
 	@ViewChild(MatMenuTrigger) actionsMenu!: MatMenuTrigger;
 
