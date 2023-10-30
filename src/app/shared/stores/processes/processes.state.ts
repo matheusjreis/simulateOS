@@ -302,6 +302,15 @@ export class ProcessesState {
 
 		const updatedProcess: Process = { ...action.process, state: action.state };
 
+		if (
+			updatedProcess.type === ProcessTypes.cpuAndIoBound &&
+			updatedProcess.state === ProcessStates.ready
+		) {
+			updatedProcess.currentType = this.processesService.getProcessType(
+				ProcessTypes.cpuAndIoBound
+			);
+		}
+
 		data[index] = updatedProcess;
 
 		if (action.process.currentType === ProcessTypes.cpuBound) {
