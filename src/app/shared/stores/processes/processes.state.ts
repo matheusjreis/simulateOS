@@ -69,8 +69,19 @@ export class ProcessesState {
 			({ state }) => state === ProcessStates.ready
 		);
 
-		if (scalingType === ScalingTypesEnum.CircularWithPriorities)
-			readyProcesses.sort((a, b) => b.priority - a.priority);
+			switch (scalingType) {
+				case ScalingTypesEnum.CircularWithPriorities:
+					readyProcesses.sort((a, b) => b.priority - a.priority);
+					break;
+				case ScalingTypesEnum.ShortestRemainingTimeNext:
+					readyProcesses.sort(
+						(a, b) =>
+							a.processTimeToFinish - a.cpuTime - (b.processTimeToFinish - b.cpuTime)
+					);
+					break;
+				default:
+					break;
+			}
 
 		return readyProcesses;
 	}
@@ -619,7 +630,7 @@ export class ProcessesState {
 		);
 
 		if (currentExecutingProcess) {
-			this.runCircularProcess(currentExecutingProcess, context);
+			this.runFirstInFirstOutProcess(currentExecutingProcess, context);
 		} else {
 			this.runShortestRemainingTime(context);
 		}
