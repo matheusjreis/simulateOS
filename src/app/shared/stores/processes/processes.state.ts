@@ -69,19 +69,21 @@ export class ProcessesState {
 			({ state }) => state === ProcessStates.ready
 		);
 
-			switch (scalingType) {
-				case ScalingTypesEnum.CircularWithPriorities:
-					readyProcesses.sort((a, b) => b.priority - a.priority);
-					break;
-				case ScalingTypesEnum.ShortestRemainingTimeNext:
-					readyProcesses.sort(
-						(a, b) =>
-							a.processTimeToFinish - a.cpuTime - (b.processTimeToFinish - b.cpuTime)
-					);
-					break;
-				default:
-					break;
-			}
+		switch (scalingType) {
+			case ScalingTypesEnum.CircularWithPriorities:
+				readyProcesses.sort((a, b) => b.priority - a.priority);
+				break;
+			case ScalingTypesEnum.ShortestRemainingTimeNext:
+				readyProcesses.sort(
+					(a, b) =>
+						a.processTimeToFinish -
+						a.cpuTime -
+						(b.processTimeToFinish - b.cpuTime)
+				);
+				break;
+			default:
+				break;
+		}
 
 		return readyProcesses;
 	}
@@ -624,9 +626,7 @@ export class ProcessesState {
 		const state = context.getState();
 
 		const currentExecutingProcess = state.data.find(
-			({ state, currentType }) =>
-				state === ProcessStates.execution &&
-				currentType === ProcessTypes.cpuBound
+			({ state }) => state === ProcessStates.execution
 		);
 
 		if (currentExecutingProcess) {
