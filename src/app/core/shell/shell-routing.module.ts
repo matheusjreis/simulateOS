@@ -9,21 +9,9 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'process-manager',
-        pathMatch: 'full',
-      },
-      {
-        path: 'process-manager',
         loadChildren: () =>
           import('../../modules/process-manager/process-manager.module').then(
             (m) => m.ProcessManagerModule
-          ),
-      },
-      {
-        path: 'cpu-manager',
-        loadChildren: () =>
-          import('../../modules/cpu-manager/cpu-manager.module').then(
-            (m) => m.CpuManagerModule
           ),
       },
     ],
