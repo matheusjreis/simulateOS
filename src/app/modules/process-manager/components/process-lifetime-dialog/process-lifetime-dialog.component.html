@@ -114,7 +114,12 @@
 		<div class="row">
 			<div
 				class="col"
-				style="display: flex; justify-content: flex-end; margin-top: 1em"
+				style="
+					display: flex;
+					justify-content: flex-end;
+					margin-top: 1em;
+					margin-bottom: 1em;
+				"
 			>
 				<button
 					[disabled]="!checkedProcessesLength"
@@ -127,7 +132,7 @@
 			</div>
 		</div>
 
-		<div *ngIf="chartOptions" class="row" style="margin-top: 1em">
+		<div *ngIf="chartOptions" class="row">
 			<div class="col" style="overflow: hidden">
 				<apx-chart
 					[series]="chartOptions.series"
