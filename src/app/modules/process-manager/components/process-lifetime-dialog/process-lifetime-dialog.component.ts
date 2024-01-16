@@ -146,7 +146,7 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 			[]
 		);
 
-		const labelsColors = logsByPID.map((logs) => logs[0].process.color);
+		const labelsColors = checkedProcesses.map((process) => process.color);
 
 		const sortedLogs = [...filteredLogs].sort(
 			(a, b) => a.currentTime - b.currentTime
@@ -159,21 +159,30 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 			y: Array<number>;
 		}> = [];
 
-		logsByPID.forEach((logs) => {
-			if (!(logs.length % 2 == 0)) return;
+		logsByPID.forEach((logs, index) => {
+			if (logs.length < 2) {
+				const wrongProcess = checkedProcesses[index];
 
-			const logsHalfSize = Math.floor(logs.length / 2);
-
-			for (let i = 0; i < logsHalfSize; i++) {
-				const start = logs[i * 2].currentTime - minTime;
-				const end = logs[i * 2 + 1].currentTime - minTime;
-
-				const process = logs[i * 2].process;
+				if (!wrongProcess) return;
 
 				data.push({
-					x: `PID ${process.id}`,
-					y: [start, end],
+					x: `PID ${wrongProcess.id}`,
+					y: [],
 				});
+			} else {
+				const logsHalfSize = Math.floor(logs.length / 2);
+
+				for (let i = 0; i < logsHalfSize; i++) {
+					const start = logs[i * 2].currentTime - minTime;
+					const end = logs[i * 2 + 1].currentTime - minTime;
+
+					const process = logs[i * 2].process;
+
+					data.push({
+						x: `PID ${process.id}`,
+						y: [start, end],
+					});
+				}
 			}
 		});
 
