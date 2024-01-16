@@ -160,7 +160,7 @@ export class ProcessLifetimeDialogComponent implements OnInit, OnDestroy {
 		}> = [];
 
 		logsByPID.forEach((logs, index) => {
-			if (logs.length < 2) {
+			if (logs.length < 2 || logs.length % 2 !== 0) {
 				const wrongProcess = checkedProcesses[index];
 
 				if (!wrongProcess) return;
