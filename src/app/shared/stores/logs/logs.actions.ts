@@ -10,4 +10,9 @@ export namespace Logs {
 		static readonly type = '[Logs] Clear Logs';
 		constructor() {}
 	}
+
+	export class ResetState {
+		static readonly type = '[Logs] Reset State';
+		constructor() {}
+	}
 }

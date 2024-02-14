@@ -9,11 +9,13 @@ export interface LogsStateModel {
 	data: Array<Log>;
 }
 
+export const LOGS_STATE_INITIAL_STATE: LogsStateModel = {
+	data: [],
+};
+
 @State<LogsStateModel>({
 	name: 'simulateOSLogs',
-	defaults: {
-		data: [],
-	},
+	defaults: { ...LOGS_STATE_INITIAL_STATE },
 })
 @Injectable()
 export class LogsState {
@@ -40,5 +42,10 @@ export class LogsState {
 	@Action(Logs.ClearLogs)
 	clearLogs(context: StateContext<LogsStateModel>) {
 		context.patchState({ data: [] });
+	}
+
+	@Action(Logs.ResetState)
+	resetState(context: StateContext<LogsStateModel>) {
+		context.setState({ ...LOGS_STATE_INITIAL_STATE });
 	}
 }

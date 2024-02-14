@@ -21,17 +21,19 @@ export interface ProcessesStateModel {
 	displayedColumns: Array<string>;
 }
 
+export const PROCESSES_STATE_INITIAL_STATE: ProcessesStateModel = {
+	data: [],
+	colors: [],
+	timer: 0,
+	ioWaitTime: 1,
+	timeSlice: 2,
+	scalingType: ScalingTypesEnum.Circular,
+	displayedColumns: ['id', 'cpuTime', 'processTimeToFinish'],
+};
+
 @State<ProcessesStateModel>({
 	name: 'simulateOSProcesses',
-	defaults: {
-		data: [],
-		colors: [],
-		timer: 0,
-		ioWaitTime: 1,
-		timeSlice: 2,
-		scalingType: ScalingTypesEnum.Circular,
-		displayedColumns: ['id', 'cpuTime', 'processTimeToFinish'],
-	},
+	defaults: { ...PROCESSES_STATE_INITIAL_STATE },
 })
 @Injectable()
 export class ProcessesState {
@@ -794,5 +796,10 @@ export class ProcessesState {
 		});
 
 		context.dispatch([new Logs.ClearLogs()]);
+	}
+
+	@Action(Processes.ResetState)
+	resetState(context: StateContext<ProcessesStateModel>) {
+		context.setState({ ...PROCESSES_STATE_INITIAL_STATE });
 	}
 }

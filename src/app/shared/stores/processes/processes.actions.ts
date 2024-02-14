@@ -47,4 +47,9 @@ export namespace Processes {
 		static readonly type = '[Processes] Pick Scaling Type';
 		constructor(public scalingType: ScalingTypesEnum) {}
 	}
+
+	export class ResetState {
+		static readonly type = '[Processes] Reset State';
+		constructor() {}
+	}
 }
