@@ -22,7 +22,7 @@ export interface ProcessesStateModel {
 }
 
 @State<ProcessesStateModel>({
-	name: 'processes',
+	name: 'simulateOSProcesses',
 	defaults: {
 		data: [],
 		colors: [],

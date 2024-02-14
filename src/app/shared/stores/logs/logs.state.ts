@@ -10,7 +10,7 @@ export interface LogsStateModel {
 }
 
 @State<LogsStateModel>({
-	name: 'logs',
+	name: 'simulateOSLogs',
 	defaults: {
 		data: [],
 	},
