@@ -34,5 +34,18 @@ import { HttpHeaders } from '@angular/common/http';
         { headers: headers }
       );
     }
+
+    closeSession(){
+      const token = localStorage.getItem("userToken");
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+      
+      return this.http.post<EduMetricsApiReponse>(
+        `${this.baseUrl}/session/close`,
+        null,
+        { headers: headers }
+      );
+    }
   }
   
