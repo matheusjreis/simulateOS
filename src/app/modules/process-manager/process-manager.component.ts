@@ -22,6 +22,9 @@ import { CreateProcessDialogComponent } from './components/create-process-dialog
 import { EditProcessDialogComponent } from './components/edit-process-dialog/edit-process-dialog.component';
 import { ProcessLifetimeDialogComponent } from './components/process-lifetime-dialog/process-lifetime-dialog.component';
 import { UpdatePriorityDialogComponent } from './components/update-priority-dialog/update-priority-dialog.component';
+import { UserService } from 'src/app/shared/services/user.service';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
 	selector: 'app-process-manager',
@@ -62,7 +65,7 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 	maxProcesses = 15;
 	ioColumns: Array<string> = [];
 
-	constructor(private dialog: MatDialog, private store: Store) {}
+	constructor(private dialog: MatDialog, private store: Store, private userService: UserService, private router: Router, private snackBar: MatSnackBar) {}
 
 	ngOnInit() {
 		this.subscriptions.add(
@@ -70,6 +73,23 @@ export class ProcessManagerComponent implements OnInit, OnDestroy {
 				this.availableProcesses = processes;
 			})
 		);
+
+		this.userService.getLoggedUser().subscribe(
+			response => {
+			  if(response.success){
+				this.userService.setUserDataOnLocalStorage(response.data!);
+	  
+				if(!response.data){
+					this.router.navigate(['login']);
+					this.snackBar.open('Sessão expirada, faça o login novamente!', 'OK');
+				}
+			  }
+			},
+			error => {
+			  this.snackBar.open('Sessão expirada, faça o login novamente!', 'OK');
+			  this.router.navigate(['login']);
+			}
+		  )
 
 		this.subscriptions.add(
 			this.executingProcess$.subscribe(

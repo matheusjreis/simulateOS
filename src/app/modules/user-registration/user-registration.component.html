@@ -1,0 +1,83 @@
+<div class="login-wrapper">
+  <mat-toolbar color="primary">
+    <mat-toolbar-row>
+      <span class="spacer"></span>
+      <a mat-button routerLink="/login">Login</a>
+    </mat-toolbar-row>
+  </mat-toolbar>
+  <div class="login-box">
+    <mat-card class="box">
+      <mat-card-header>
+        <mat-card-title>
+          <img class="app-img" src="/assets/images/cpu-logo.png" width="90rem">
+          <div class="app-name">Registro</div>
+        </mat-card-title>
+      </mat-card-header>
+      <form [formGroup]="registerForm" (ngSubmit)="submitDetails()" class="register-form">
+          <mat-card-content>
+            <mat-form-field class="example-full-width">
+              <input matInput placeholder="Nome" formControlName="name" />
+              <mat-error *ngIf="name.invalid && (name.dirty || name.touched)">
+                <div *ngIf="name.errors?.['pattern']">Digite um nome válido</div>
+              </mat-error>
+            </mat-form-field>
+      
+            <mat-form-field class="example-full-width">
+              <input matInput placeholder="Email" formControlName="email" />
+              <mat-error *ngIf="email.invalid && (email.dirty || email.touched)">
+                <div *ngIf="email.errors?.['email']">Digite um email válido</div>
+              </mat-error>
+            </mat-form-field>
+      
+            <mat-form-field class="example-full-width">
+              <input matInput placeholder="País" formControlName="country" />
+              <mat-error *ngIf="country.invalid && (country.dirty || country.touched)">
+              </mat-error>
+            </mat-form-field>
+      
+            <mat-form-field class="example-full-width">
+              <input matInput placeholder="Cidade" formControlName="city" />
+              <mat-error *ngIf="city.invalid && (city.dirty || city.touched)">
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-select matNativeControl placeholder="Educação" required>
+                <mat-option value=1>Aluno do ensino médio</mat-option>
+                <mat-option value=2>Aluno da Graduação</mat-option>
+                <mat-option value=3>Aluno da Pós-Graduação</mat-option>
+                <mat-option value=4>Professor</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="example-full-width">
+              <input matInput placeholder="Estado" formControlName="state" />
+              <mat-error *ngIf="state.invalid && (state.dirty || state.touched)">
+              </mat-error>
+            </mat-form-field>
+      
+            <mat-form-field class="example-full-width">
+              <input matInput type="password" placeholder="Senha" formControlName="password" />
+              <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
+              </mat-error>
+            </mat-form-field>
+      
+            <mat-form-field class="example-full-width">
+              <input matInput type="password" placeholder="Confirmar senha" formControlName="confirmPassword" />
+              <mat-error *ngIf="confirmPassword.invalid && (confirmPassword.dirty || confirmPassword.touched)">
+                <div *ngIf="confirmPassword.errors?.['required']">Confirme a senha</div>
+              </mat-error>
+              <mat-error *ngIf="registerForm.errors?.['passwordMismatch'] && confirmPassword.valid && password.valid">
+                Senhas precisam ser iguais
+              </mat-error>
+            </mat-form-field>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-stroked-button class="btn-block register-btn" type="submit" [disabled]="registerForm.invalid">
+              Cadastrar
+            </button>
+          </mat-card-actions>
+          <div class="mt-2">Já possui cadastro? <a routerLink="/login">Login</a></div>
+      </form>
+      
+    </mat-card>
+  </div>
+</div>
