@@ -4,6 +4,7 @@ import { HomeComponent } from './home.component';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 
+
 const routes: Routes = [
   {
     path: '',
@@ -15,4 +16,6 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule, FormsModule, ReactiveFormsModule],
 })
-export class HomeRoutingModule {}
+export class HomeRoutingModule {
+  
+}

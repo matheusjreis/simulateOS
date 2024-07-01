@@ -6,7 +6,9 @@
         </button>
         <span class="example-spacer"></span>
         <span class="spacer"></span>
-
+        <a mat-button >
+         <mat-icon>person</mat-icon> {{userInformations?.Name}}
+       </a>
         <a mat-button (click)="closeSession()">
           <mat-icon>logout</mat-icon> Sair
         </a>

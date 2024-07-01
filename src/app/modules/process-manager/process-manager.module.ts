@@ -21,7 +21,7 @@ import { ProcessLifetimeDialogComponent } from './components/process-lifetime-di
 import { UpdatePriorityDialogComponent } from './components/update-priority-dialog/update-priority-dialog.component';
 import { ProcessManagerRoutingModule } from './process-manager-routing.module';
 import { ProcessManagerComponent } from './process-manager.component';
-
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 @NgModule({
 	imports: [
 		CommonModule,
@@ -39,6 +39,7 @@ import { ProcessManagerComponent } from './process-manager.component';
 		SharedModule,
 		MatCheckboxModule,
 		NgApexchartsModule,
+		MatSnackBarModule
 	],
 	declarations: [
 		ProcessManagerComponent,

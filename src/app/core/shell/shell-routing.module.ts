@@ -48,6 +48,13 @@ const routes: Routes = [
             (m) => m.UserRegistrationModule
           ),
       },
+      {
+        path: '',
+        loadChildren: () =>
+          import('../../modules/login/login.module').then(
+            (m) => m.LoginModule
+          ),
+      },
     ],
   },
 ];
