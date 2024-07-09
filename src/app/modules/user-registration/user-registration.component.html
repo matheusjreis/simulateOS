@@ -39,6 +39,11 @@
               <input matInput placeholder="Cidade" formControlName="city" />
               <mat-error *ngIf="city.invalid && (city.dirty || city.touched)">
               </mat-error>
+            </mat-form-field>            
+            <mat-form-field class="example-full-width">
+              <input matInput placeholder="Estado" formControlName="state" />
+              <mat-error *ngIf="state.invalid && (state.dirty || state.touched)">
+              </mat-error>
             </mat-form-field>
             <mat-form-field>
               <mat-select matNativeControl placeholder="Educação" required>
@@ -48,12 +53,6 @@
                 <mat-option value=4>Professor</mat-option>
               </mat-select>
             </mat-form-field>
-            <mat-form-field class="example-full-width">
-              <input matInput placeholder="Estado" formControlName="state" />
-              <mat-error *ngIf="state.invalid && (state.dirty || state.touched)">
-              </mat-error>
-            </mat-form-field>
-      
             <mat-form-field class="example-full-width">
               <input matInput type="password" placeholder="Senha" formControlName="password" />
               <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
