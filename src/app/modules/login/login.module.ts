@@ -18,4 +18,5 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
   imports: [CommonModule, LoginRoutingModule, MatTableModule, MatFormFieldModule, MatSliderModule, FormsModule, MatInputModule, MatCardModule, MatButtonModule, MatToolbarModule, MatSnackBarModule],
   declarations: [LoginComponent],
 })
+
 export class LoginModule {}

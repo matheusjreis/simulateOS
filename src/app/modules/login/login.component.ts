@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/shared/services/auth.service';
 import { UserCredentials } from 'src/app/interfaces/auth';
 import { UserService } from 'src/app/shared/services/user.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import { UserIp } from 'src/app/interfaces/userIp';
 
 // import { NotifierService } from 'angular-notifier';
 
@@ -35,22 +36,16 @@ export class LoginComponent implements OnInit {
 
   loginUser() {
     const { email, password } = this.loginForm.value;
-    
     const userCredentials = <UserCredentials>({
       userName: email,
       userPassword: password
-   });
-
-    this.authService.authenticateUser(userCredentials).subscribe(
-      response => {
-        this.snackBar.open('Não se esqueça de clicar em logout ao terminar a sessão!', 'OK');
-        localStorage.setItem('userToken', response.data!);
-        this.router.navigate(['home']);
-      },
-      error => {
-        this.snackBar.open('Usuário não autorizado!', 'Fechar');
-      }
-    )
+    });
+    if(this.authService.authenticateUser(userCredentials)){
+      this.snackBar.open('Não se esqueça de clicar em logout ao terminar a sessão!', 'OK');
+      this.router.navigate(['home']);
+    }else{
+      this.snackBar.open('Usuário não autorizado!', 'Fechar');
+    }   
   }
 
   ngOnInit(): void {

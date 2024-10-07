@@ -1,93 +1,63 @@
-import { Injectable } from '@angular/core';
-import { Observable, concatMap, delay, from, of, toArray } from 'rxjs';
-
-import { ProcessColors } from '../constants/process-colors.constants';
-import { ProcessStates } from '../constants/process-states.constants';
-import {
-	ProcessTypes,
-	ProcessTypesType,
-} from '../constants/process-types.constants';
-import { ScalingTypesEnum } from '../constants/scaling-types.constants';
-import { GenericSelectData } from '../models/generic-select-data';
-import { CreateProcessDTO, Process } from '../models/process';
-import { ScalingTypeDescriptionPipe } from '../pipes/scaling-type-description.pipe';
+import { Injectable } from "@angular/core";
+import { Color, ProcessColors } from "../constants/process-colors.constants";
+import { ProcessStates } from "../constants/process-states.constants";
+import { CreateProcessDTO, Process } from "../models/process";
+import { concatMap, delay, from, Observable, of, toArray } from "rxjs";
 
 @Injectable({
-	providedIn: 'root',
+    providedIn: "root",
 })
 export class ProcessesService {
-	private generateId(): string {
-		const date = new Date();
-		return `${date.getMinutes()}${date.getSeconds()}${date.getMilliseconds()}`;
-	}
+    processColors: Color[] = [];
 
-	private generateColor(color: string, currentIndex: number): string {
-		const randomIndex = this.getRandomNumber();
+    createProcess(
+        process: CreateProcessDTO,
+        time: number
+    ): Observable<Process[]> {
+        return from(Array.from(Array(process.number).keys())).pipe(
+            concatMap((index) => {
+                const item = {
+                    id: this.generateId(),
+                    priority: process.priority,
+                    color: this.generateColor(process.color, index),
+                    type: process.type,
+                    state: ProcessStates.ready,
+                    cpuTime: 0,
+                    timeCreated: time,
+                };
+                return of(item).pipe(delay(50));
+            }),
+            toArray()
+        );
+    }
 
-		let generatedColor = ProcessColors[randomIndex].color;
+    private generateId(): string {
+        const date = new Date();
+        return `${date.getMinutes()}${date.getSeconds()}${date.getMilliseconds()}`;
+    }
 
-		if (currentIndex === 0) {
-			const foundColor = ProcessColors.find(
-				(item) => item.color === color && item.isAvailable
-			);
+    private generateColor(color: string, currentIndex: number): string {
+        const randomIndex = this.getRandomNumber();
 
-			if (foundColor) generatedColor = foundColor.color;
-		}
+        let generatedColor = ProcessColors[randomIndex].color;
 
-		ProcessColors.find((item) => item.color === generatedColor)!.isAvailable =
-			false;
+        if (currentIndex === 0) {
+            const foundColor = ProcessColors.find(
+                (item) => item.color === color && item.isAvailable
+            );
 
-		return generatedColor;
-	}
+            if (foundColor) generatedColor = foundColor.color;
+        }
 
-	private getRandomNumber(): number {
-		const availableColors = ProcessColors.length;
-		return Math.floor(Math.random() * (availableColors - 1));
-	}
+        ProcessColors.find(
+            (item) => item.color === generatedColor
+        )!.isAvailable = false;
 
-	public createProcess(
-		process: CreateProcessDTO,
-		time: number
-	): Observable<Process[]> {
-		return from(Array.from(Array(process.number).keys())).pipe(
-			concatMap((index) =>
-				of({
-					id: this.generateId(),
-					priority: process.priority,
-					color: this.generateColor(process.color, index),
-					type: process.type,
-					state: ProcessStates.ready,
-					cpuTime: 0,
-					timeCreated: time,
-					processTimeToFinish: process.processTimeToFinish,
-					executingTime: 0,
-					currentType: this.getProcessType(process.type),
-				}).pipe(delay(50))
-			),
-			toArray()
-		);
-	}
+        return generatedColor;
+    }
 
-	public getScalingTypesSelectData(): GenericSelectData<ScalingTypesEnum>[] {
-		const scalingTypes = Object.values(ScalingTypesEnum).filter(
-			(value) => typeof value === 'number'
-		) as Array<ScalingTypesEnum>;
-
-		return scalingTypes.map((scalingType) => ({
-			id: scalingType,
-			description: new ScalingTypeDescriptionPipe().transform(scalingType),
-		}));
-	}
-
-	public getProcessType(type: ProcessTypesType): ProcessTypesType {
-		let value = type;
-
-		if (type === ProcessTypes.cpuAndIoBound) {
-			const types = [ProcessTypes.cpuBound, ProcessTypes.ioBound];
-
-			value = types[Math.floor(Math.random() * types.length)];
-		}
-
-		return value;
-	}
+    private getRandomNumber(): number {
+        const availableColors = ProcessColors.length;
+        return Math.floor(Math.random() * (availableColors - 1));
+    }
 }

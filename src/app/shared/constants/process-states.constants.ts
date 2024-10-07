@@ -1,43 +1,37 @@
-export type ProcessStatesType =
-	| 'ready'
-	| 'execution'
-	| 'suspended'
-	| 'finished'
-	| 'ioReady'
-	| 'ioExecution';
+export type ProcessStatesType = 'ready' | 'execution' | 'suspended' | 'io' | 'readyIo' | 'finished';
 
 export interface IProcessStates {
-	ready: ProcessStatesType;
-	execution: ProcessStatesType;
-	suspended: ProcessStatesType;
-	finished: ProcessStatesType;
-	ioReady: ProcessStatesType;
-	ioExecution: ProcessStatesType;
+    ready: ProcessStatesType;
+    execution: ProcessStatesType;
+    suspended: ProcessStatesType;
+    io: ProcessStatesType;
+	readyIo: ProcessStatesType;
+    finished: ProcessStatesType;
 }
 
 export const ProcessStates: IProcessStates = {
-	ready: 'ready',
-	execution: 'execution',
-	suspended: 'suspended',
-	finished: 'finished',
-	ioExecution: 'ioExecution',
-	ioReady: 'ioReady',
+    ready: 'ready',
+    execution: 'execution',
+    suspended: 'suspended',
+    io: 'io',
+	readyIo: 'readyIo',
+    finished: 'finished'
 };
 
 export const ProcessStatesNames = {
-	ready: 'Pronto',
-	execution: 'Execução',
-	suspended: 'Suspenso',
-	finished: 'finished',
-	ioExecution: 'Execução IO',
-	ioReady: 'IO Pronto',
+    ready: 'Pronto',
+    execution: 'Execução',
+    suspended: 'Suspenso',
+    io: 'I/O',
+	readyIo: 'Pronto I/O',
+    finished: 'finished'
 };
 
 export const ProcessStatesColors = {
-	ready: 'primary',
-	execution: 'accent',
-	suspended: 'warn',
-	finished: 'finished',
-	ioReady: 'primary',
-	ioExecution: 'accent',
+    ready: 'primary',
+    execution: 'accent',
+    suspended: 'warn',
+    io: 'primary',
+	readyIo: 'primary',
+    finished: 'finished'
 };

@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { UserCredentials } from 'src/app/interfaces/auth';
-import {MatSnackBar} from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { UserService } from 'src/app/shared/services/user.service';
 import { AuthService } from 'src/app/shared/services/auth.service';
-import { User } from 'src/app/interfaces/auth';
+import { UserCredentials } from 'src/app/interfaces/auth';
+import { UserService } from 'src/app/shared/services/user.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 // import { NotifierService } from 'angular-notifier';
 
@@ -16,64 +15,23 @@ import { User } from 'src/app/interfaces/auth';
 })
 
 export class HomeComponent implements OnInit {
-  userInformations: User | null;
-
   constructor(
-    private authService: AuthService,
     private userService: UserService,
-    private router: Router
-    // private msgService: MessageService
-  ) { 
-    this.userInformations = null;
-  }
-
+    private authService: AuthService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) { }
 
   ngOnInit(): void {
-    this.userService.getLoggedUser().subscribe(
+    this.authService.isSessionActivated().subscribe(
       response => {
-        if(response.success){
-          this.showUserGreetings();
-          this.userService.setUserDataOnLocalStorage(response.data!);
-
-          if(!response.data)
-            this.router.navigate(['login']);
+        if(!response.data){
+          this.snackBar.open('Sessão inválida!', 'Fechar');
+          this.router.navigate(['login']);
         }
-      },
-      error => {
+      },error => {
         this.router.navigate(['login']);
       }
     )
   }
-
-  closeSession() {
-    this.authService.closeSession().subscribe(
-      response => {
-        this.router.navigate(['login']);
-      },
-      error => {
-        console.log(error.message);
-        this.router.navigate(['login']);
-      }
-    )
-  }
-
-  showUserGreetings(){
-    this.userService.getLoggedUser().subscribe(
-      response => {
-        if(response.success){
-          this.userService.setUserDataOnLocalStorage(response.data!);
-          this.userInformations = response.data;
-        }
-      },
-      error => {
-        this.router.navigate(['login']);
-        // this.msgService.add({ severity: 'error', summary: 'Erro', detail: error.error.message });
-      }
-    )
-  }
-
-
-
-
-
 }
