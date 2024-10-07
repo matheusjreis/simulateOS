@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { User } from '../../interfaces/auth';
 import { EduMetricsApiReponse } from '../../interfaces/response';
 import { HttpHeaders } from '@angular/common/http';
+import { UserIp } from 'src/app/interfaces/userIp';
 @Injectable({
   providedIn: 'root'
 })
@@ -33,6 +34,12 @@ export class UserService {
 
   cleanUserDataOnLocalStorage(){
     localStorage.removeItem("userInformations");
+  }
+
+  getUserIP(){   
+    return this.http.get(
+      `https://api.ipify.org/?format=json`,
+    );
   }
 
   getUserInformationOnLocalStorage(){

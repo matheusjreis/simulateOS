@@ -1,39 +1,15 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-
-import { SharedModule } from 'src/app/shared/shared.module';
-import { NavbarComponent } from './components/navbar/navbar.component';
-import { PickScalingTypeDialogComponent } from './components/pick-scaling-type-dialog/pick-scaling-type-dialog.component';
-import { ProcessesStatsComponent } from './components/processes-stats/processes-stats.component';
-import { ShellRoutingModule } from './shell-routing.module';
+import { CommonModule } from '@angular/common';
 import { ShellComponent } from './shell.component';
+import { ShellRoutingModule } from './shell-routing.module';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { MatButtonModule } from '@angular/material/button';
+import { ProcessesStatsComponent } from './components/processes-stats/processes-stats.component';
+import { MatSliderModule } from '@angular/material/slider';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
-	imports: [
-		CommonModule,
-		SharedModule,
-		ShellRoutingModule,
-		MatButtonModule,
-		FormsModule,
-		MatDialogModule,
-		ReactiveFormsModule,
-		MatSelectModule,
-		MatFormFieldModule,
-		MatInputModule,
-		MatIconModule,
-	],
-	declarations: [
-		ShellComponent,
-		NavbarComponent,
-		ProcessesStatsComponent,
-		PickScalingTypeDialogComponent,
-	],
+  imports: [CommonModule, ShellRoutingModule, MatButtonModule, MatSliderModule, FormsModule],
+  declarations: [ShellComponent, NavbarComponent, ProcessesStatsComponent],
 })
 export class ShellModule {}

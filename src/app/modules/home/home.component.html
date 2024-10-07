@@ -6,28 +6,18 @@
         </button>
         <span class="example-spacer"></span>
         <span class="spacer"></span>
-        <a mat-button >
-         <mat-icon>person</mat-icon> {{userInformations?.Name}}
-       </a>
-        <a mat-button (click)="closeSession()">
-          <mat-icon>logout</mat-icon> Sair
-        </a>
+        <a mat-button routerLink="/login">Sair</a>
      </mat-toolbar-row>
   </mat-toolbar>
   <mat-drawer-container class="example-container" autosize>
      <mat-drawer #drawer class="example-sidenav" mode="side">
       <div class="module-options">
-          <a mat-button class="listing-heading-item" routerLink="/process-manager"><mat-icon>memory</mat-icon>  Escalonador de Processos</a>
-          <a mat-button class="listing-heading-item" href="/cpu-manager" ><mat-icon>save</mat-icon> Gerenciador de processos</a>
-          <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/filesystem" ><mat-icon>folder_open</mat-icon> Sistemas de arquivos</a>
-          <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/deadlock/" ><mat-icon>view_list</mat-icon> Threads</a>
+          <a mat-button class="listing-heading-item" routerLink="/process-manager">Escalonador de Processos</a>
+          <a mat-button class="listing-heading-item" href="/cpu-manager" >Gerenciador de memória</a>
+          <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/filesystem" >Sistemas de arquivos</a>
+          <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/deadlock/" >Threads</a>
       </div>
+      
      </mat-drawer>
-  <div class="welcome-section">
-   <div>
-      Seja bem-vindo!
-   </div>
-  </div>
-
   </mat-drawer-container>
 </div>

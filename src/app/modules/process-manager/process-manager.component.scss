@@ -1,49 +1,41 @@
 .process-manager {
-	&__title {
-		display: flex;
-		justify-content: space-between;
+    &__title {
+        display: flex;
+        justify-content: space-between;
 
-		h1 {
-			margin-bottom: 0;
-		}
+        h1 {
+            margin-bottom: 0;
+        }
 
-		h4 {
-			margin-bottom: 0;
-		}
-	}
+        h4 {
+            margin-bottom: 0;
+        }
+    }
 
-	&__table {
-		width: 100%;
-		height: 100%;
+    &__table {
+        width: 100%;
+        margin-top: 24px;
+    }
 
-		height: auto;
-		overflow-y: auto;
-		overflow-x: hidden;
+    &__flex-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-		& > table {
-			width: 100%;
-		}
-	}
+    &__color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
 
-	&__flex-cell {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
+    &__process-id {
+        font-weight: 500;
+    }
 
-	&__color {
-		width: 12px;
-		height: 12px;
-		border-radius: 50%;
-	}
-
-	&__process-id {
-		font-weight: 500;
-	}
-
-	&__process-type {
-		font-size: 12px;
-	}
+    &__process-type {
+        font-size: 12px;
+    }
 }
 
 .main-tables {
@@ -58,18 +50,12 @@
 		min-height: 100%;
 		width: 0;
 		border-right: 1px solid #cecece;
-		user-select: none;
+        user-select: none;
 	}
 }
 
-.process-lifetime-dialog-button-block {
-	margin: 24px 0;
-	display: flex;
-	justify-content: flex-end;
-}
-
 .executing-process {
-	margin: 24px auto;
+	margin: 24px auto 0;
 	width: 256px;
 	border-radius: 5px;
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -88,32 +74,26 @@
 	display: flex;
 	align-items: center;
 	gap: 4px;
-	width: fit-content;
-	margin: 4px auto 0;
+    width: fit-content;
+    margin: 4px auto 0;
 	font-size: 20px;
 
 	.process-color {
-		width: 12px;
-		height: 12px;
-		border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
 	}
 
 	.process-id {
-		font-weight: 500;
+        font-weight: 500;
 	}
 }
 
 .process-row {
-	cursor: pointer;
+    cursor: pointer;
 
-	&:hover {
-		transform: scale(1.1);
-		box-shadow: 0px 0px 10px 2px rgb(0 0 0 / 10%);
-	}
-}
-
-.finished-row {
-	td {
-		opacity: 0.4;
-	}
+    &:hover {
+        transform: scale(1.1);
+        box-shadow: 0px 0px 10px 2px rgb(0 0 0 / 10%);
+    }
 }

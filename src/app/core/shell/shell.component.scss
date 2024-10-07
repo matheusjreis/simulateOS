@@ -1,10 +1,11 @@
 .shell {
-	&__content-wrapper {
-		margin: 0 auto;
-	}
+  &__content-wrapper {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
 
-	&__page-wrapper {
-		margin: 24px auto;
-		padding: 0 24px;
-	}
+  &__page-wrapper {
+    max-width: 1280px;
+    margin: 24px auto;
+  }
 }

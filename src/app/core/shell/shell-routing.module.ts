@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ShellComponent } from './shell.component';
 
+
 const routes: Routes = [
   {
     path: '',
@@ -39,20 +40,6 @@ const routes: Routes = [
         loadChildren: () =>
           import('../../modules/home/home.module').then(
             (m) => m.HomeModule
-          ),
-      },
-      {
-        path: 'register',
-        loadChildren: () =>
-          import('../../modules/user-registration/user-registration.module').then(
-            (m) => m.UserRegistrationModule
-          ),
-      },
-      {
-        path: '',
-        loadChildren: () =>
-          import('../../modules/login/login.module').then(
-            (m) => m.LoginModule
           ),
       },
     ],
