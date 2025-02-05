@@ -41,8 +41,12 @@ export class LoginComponent implements OnInit {
       userPassword: password
     });
     if(this.authService.authenticateUser(userCredentials)){
-      this.snackBar.open('Não se esqueça de clicar em logout ao terminar a sessão!', 'OK');
-      this.router.navigate(['home']);
+      const snackBarRef = this.snackBar.open('Não se esqueça de clicar em logout ao terminar a sessão!', 'OK', {
+        duration: 2000 
+      });
+      snackBarRef.afterDismissed().subscribe(() => {
+        this.router.navigate(['home']);
+      });
     }else{
       this.snackBar.open('Usuário não autorizado!', 'Fechar');
     }   
