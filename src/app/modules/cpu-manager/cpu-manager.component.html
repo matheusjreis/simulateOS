@@ -73,47 +73,5 @@
                 ></tr>
             </table>
         </div>
-
-        <div class="col">
-            <div class="row">
-                <div class="col">
-                    <div>Tempo de espera de I/O</div>
-                    <mat-slider
-                        [min]="1"
-                        [max]="10"
-                        [step]="1"
-                        [tickInterval]="1"
-                        [(ngModel)]="waitTime"
-                        color="primary"
-                    >
-                    </mat-slider>
-                </div>
-
-                <div class="col">
-                    <div>Fatia de tempo</div>
-                    <mat-slider
-                        [min]="1"
-                        [max]="10"
-                        [step]="1"
-                        [tickInterval]="1"
-                        [(ngModel)]="timeSlice"
-                        color="primary"
-                    >
-                    </mat-slider>
-                </div>
-
-                <div class="col">
-                    <div>Clock da UCP</div>
-                    <mat-slider
-                        [min]="1"
-                        [max]="10"
-                        [step]="1"
-                        [tickInterval]="1"
-                        color="primary"
-                    >
-                    </mat-slider>
-                </div>
-            </div>
-        </div>
     </div>
 </div>

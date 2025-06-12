@@ -1,35 +1,106 @@
 @import "~@angular/material/theming";
 
 .navbar {
-    background-color: map_get($mat-blue, 500);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 1000;
+  background-color: map_get($mat-blue, 500);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
 
-    &__wrapper {
-        max-width: 1280px;
-        margin: 0px auto;
-        padding: 16px 0px;
-        display: flex;
-        gap: 16px;
-    }
+.home-wrapper {
+  width: 100%;
+}
 
-    &__button {
-        background-color: map_get($mat-blue, 600);
-        color: map_get($mat-blue, "contrast", 600);
-    }
+.navbar__wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+}
+
+.navbar__button {
+  background-color: map_get($mat-blue, 600);
+  color: map_get($mat-blue, "contrast", 600);
 }
 
 .app-logo {
-    margin: 0 auto;
-    text-align: center;
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .app-img {
-    width: 128px;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  margin-right: 12px;
 }
 
 .app-name {
-	color: #1f294c;
-	font-size: 40px;
-	line-height: normal;
-	font-weight: bold;
-    font-family: monospace;
+  color: #1f294c;
+  font-size: 40px;
+  line-height: normal;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.example-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: calc(100vh - 64px); // 64px é a altura padrão do mat-toolbar
+  margin-top: 0;
+  padding: 0;
+}
+
+.main-content, mat-drawer-content.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+app-processes-stats,
+router-outlet {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  padding-top: 0;
+}
+
+.example-sidenav {
+  padding: 20px;
+}
+
+.module-options {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.module-options > a {
+  width: 100%;
+  text-align: left;
+  bottom: 10px;
+}
+
+.listing-heading-item {
+  padding: 0.7rem 0.5rem 0.7rem 0.5rem;
+  border-radius: 20px;
 }

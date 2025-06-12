@@ -1,22 +1,44 @@
 <div class="navbar">
-  <div class="navbar__wrapper">
-    <div class="app-logo">
-      <img class="app-img" src="/assets/images/cpu-logo.png">
-      <div class="app-name">SimulateOS</div>
+  <div class="home-wrapper">
+      <mat-toolbar color="primary">
+        <mat-toolbar-row>           
+            <button mat-icon-button class="example-icon" aria-label="Example icon-button with menu icon" mat-button (click)="drawer.toggle()">
+              <mat-icon>menu</mat-icon>
+            </button>
+            <div class="navbar__wrapper">
+              <div class="app-logo">
+                <img class="app-img" src="/assets/images/cpu-logo.png" width="50" height="120" alt="SimulateOS Logo">
+                <div class="app-name">SimulateOS</div>
+              </div>
+            </div>
+            <span class="example-spacer"></span>
+            <span class="spacer"></span>            
+            
+            <a mat-button routerLink="/login">Sair</a>
+            <button mat-icon-button>
+              <mat-icon>person</mat-icon>
+            </button>
+        </mat-toolbar-row>
+      </mat-toolbar>
+
+      
+      <mat-drawer-container class="example-container" autosize>
+        <mat-drawer #drawer class="example-sidenav" mode="over">
+          <div class="module-options">
+              <a mat-button class="listing-heading-item" routerLink="/process-manager">Escalonador de Processos</a>
+              <a mat-button class="listing-heading-item" href="/cpu-manager" >Gerenciador de memória</a>
+              <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/filesystem" >Sistemas de arquivos</a>
+              <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/deadlock/" >Threads</a>
+          </div>
+        </mat-drawer>
+
+
+         <mat-drawer-content class="main-content">
+          <app-processes-stats></app-processes-stats>
+          <router-outlet></router-outlet>
+        </mat-drawer-content>
+
+        
+      </mat-drawer-container>
     </div>
-    <!-- <a
-      routerLink="/process-manager"
-      mat-raised-button
-      [ngClass]="{ navbar__button: isCurrentRoute('/process-manager') }"
-    >
-      Gerência de processos
-    </a>
-    <a
-      routerLink="/cpu-manager"
-      mat-raised-button
-      [ngClass]="{ navbar__button: isCurrentRoute('/cpu-manager') }"
-    >
-      Gerência do processador
-    </a> -->
-  </div>
 </div>

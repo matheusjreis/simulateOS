@@ -1,0 +1,82 @@
+<app-header>
+	<div class="wrapper-header-memory">
+		<div class="content-header-memory">
+			<div style="margin-right: 20px">
+				<div class="processes-stats__title">Tempo</div>
+				<div class="processes-stats__content">{{ timer$ | async }}</div>
+			</div>
+			<div>
+				<div class="processes-stats__title" style="margin-right: 20px;">Processos</div>
+				<div class="processes-stats__content">
+					{{ (availableProcesses$ | async)?.length! }}
+				</div>
+			</div>
+			<div>
+				<div class="title">Escalonamento</div>
+			<div style="display: flex; align-items: center;">
+				<div class="content">
+					{{ blockScaling$ | async | blockScalingTypeDescription }}
+				</div>
+				<button
+					mat-icon-button
+					type="button"
+					(click)="openBlockScalingTypeDialog()"
+				>
+					<mat-icon>edit</mat-icon>
+				</button>
+			</div>
+		</div>
+		</div>
+	<button mat-raised-button color="primary" (click)="stopProcesses()">
+		Parar
+	</button>
+	</div>
+</app-header>
+
+<div class="process-memory">
+	<div class="process-memory__title">
+		<h1>Gerência de Memória</h1>
+		<button mat-raised-button color="primary" (click)="createProcess()">
+			Criar processo
+		</button>
+	</div>
+	<div class="process-memory__wrapper-memory">
+		<div class="process-memory__containerBlocos">
+			<div
+				*ngFor="let box of blocks$ | async; let i = index"
+				class="process-memory__blocos"
+				[ngClass]="{ 'empty-box': box.process, 'colored-box': !box.process }"
+				[style.background-color]="box.process?.color"
+				[attr.id]="'box_' + i"
+				(click)="box.process ? editProcess(box.process) : null"
+			>
+				<span class="block-index">{{ i }}</span>
+				<span *ngIf="box.process" class="block-info">
+					{{ box.process.id }}
+				</span>
+			</div>
+		</div>
+
+		<div class="process-memory__sequences-info">
+			<div class="process-memory__title-sequences-info">
+				<h2>Sequências</h2>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th style="padding-right: 10px; border-right: 1px black solid">
+							Blocos<br />Contíguos
+						</th>
+						<th style="padding-left: 10px">Bloco<br />Inicial</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let sequence of sequences$ | async; let rowIndex = index">
+						<td>{{ sequence.length }}</td>
+						<td>{{ sequence.start }}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
