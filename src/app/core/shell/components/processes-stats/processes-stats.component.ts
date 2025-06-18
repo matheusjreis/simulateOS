@@ -4,11 +4,13 @@ import { Observable, Subscription } from "rxjs";
 import { Process } from "src/app/shared/models/process";
 import { Processes } from "src/app/shared/stores/processes/processes.actions";
 import { ProcessesState } from "src/app/shared/stores/processes/processes.state";
+import { ViewEncapsulation } from "@angular/core";
 
 @Component({
     selector: "app-processes-stats",
     templateUrl: "./processes-stats.component.html",
     styleUrls: ["./processes-stats.component.scss"],
+    encapsulation: ViewEncapsulation.None
 })
 export class ProcessesStatsComponent implements OnInit, OnDestroy {
     @Select(ProcessesState.getAvailableProcesses)

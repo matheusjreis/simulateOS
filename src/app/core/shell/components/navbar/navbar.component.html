@@ -1,8 +1,8 @@
-<div class="navbar">
-  <div class="home-wrapper">
+<ng-container class="navbar">
+  <ng-container class="home-wrapper">
       <mat-toolbar color="primary">
-        <mat-toolbar-row>           
-            <button mat-icon-button class="example-icon" aria-label="Example icon-button with menu icon" mat-button (click)="drawer.toggle()">
+        <mat-toolbar-row class="navbar__row">           
+            <button mat-icon-button class="menu-icon" aria-label="Menu icon" mat-button (click)="drawer.toggle()">
               <mat-icon>menu</mat-icon>
             </button>
             <div class="navbar__wrapper">
@@ -20,8 +20,6 @@
             </button>
         </mat-toolbar-row>
       </mat-toolbar>
-
-      
       <mat-drawer-container class="example-container" autosize>
         <mat-drawer #drawer class="example-sidenav" mode="over">
           <div class="module-options">
@@ -31,14 +29,10 @@
               <a mat-button class="listing-heading-item" href="https://www.facom.ufu.br/~thiago/deadlock/" >Threads</a>
           </div>
         </mat-drawer>
-
-
          <mat-drawer-content class="main-content">
           <app-processes-stats></app-processes-stats>
-          <router-outlet></router-outlet>
+          <router-outlet class="router-outlet"></router-outlet>
         </mat-drawer-content>
-
-        
       </mat-drawer-container>
-    </div>
-</div>
+    </ng-container>
+</ng-container>

@@ -23,12 +23,23 @@
   align-items: center;
   gap: 16px;
   height: 100%;
+  text-align: center;
+}
+
+.navbar__row {
+  height: 7rem;
+}
+
+.menu-icon{
+  margin-right: 2rem;
+  transform: scale(1.2);
 }
 
 .navbar__button {
   background-color: map_get($mat-blue, 600);
   color: map_get($mat-blue, "contrast", 600);
 }
+
 
 .app-logo {
   display: flex;
@@ -73,15 +84,19 @@
   box-sizing: border-box;
 }
 
-app-processes-stats,
 router-outlet {
-  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: block;
+  padding-top: 0;
+}
+
+app-processes-stats{
   min-height: 0;
   min-width: 0;
   width: 100%;
-  height: 100%;
   display: block;
-  padding-top: 0;
+  padding-bottom: 2rem;
 }
 
 .example-sidenav {

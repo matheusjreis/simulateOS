@@ -23,7 +23,7 @@ import { BlocksState } from '../../stores/blocks/blocks.state';
   styleUrls: ['./create-process-dialog.component.scss'],
 })
 export class CreateProcessDialogComponent implements OnInit {
-  @Select(ProcessesState.getCurrentScalingType)
+  // @Select(ProcessesState.getCurrentScalingType)
   currentScalingType$!: Observable<ScalingTypesEnum>;
 
   @Select(BlocksState.getBlocksLength)
