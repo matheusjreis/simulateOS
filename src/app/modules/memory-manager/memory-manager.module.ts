@@ -21,7 +21,6 @@ import { MatDialogModule } from '@angular/material/dialog';
     CommonModule,
     MemoryManagerRoutingModule,
     MatButtonModule,
-    MatFormField,
     SharedModule,
 		MatIconModule,
 		ReactiveFormsModule,
